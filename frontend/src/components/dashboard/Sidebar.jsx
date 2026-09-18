@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const items = [
+  { to: "/dashboard", label: "Chat", dot: "dot-chat", end: true },
   { to: "/dashboard/blog", label: "Blog", dot: "dot-blog" },
   { to: "/dashboard/image", label: "Image", dot: "dot-image" },
   { to: "/dashboard/video", label: "Video", dot: "dot-video" },
@@ -26,6 +27,7 @@ export default function Sidebar({ open, onToggle }) {
         <NavLink
           key={item.to}
           to={item.to}
+          end={item.end}
           className={({ isActive }) => `sidebar-item ${isActive ? "active" : ""}`}
         >
           <span className={`dot ${item.dot}`} />

@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../lib/AuthContext.jsx";
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
   const [legalOpen, setLegalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -58,6 +60,11 @@ export default function Navbar() {
               About
             </NavLink>
           </li>
+          <li>
+            <NavLink to="/blog" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? "active" : "")}>
+              Blog
+            </NavLink>
+          </li>
           <li className="nav-legal" ref={menuRef}>
             <button
               type="button"
@@ -75,6 +82,15 @@ export default function Navbar() {
                   Terms &amp; Conditions
                 </NavLink>
               </div>
+            )}
+          </li>
+          <li className="nav-auth">
+            {user ? (
+              <button type="button" className="nav-auth-btn" onClick={signOut}>Sign out</button>
+            ) : (
+              <NavLink to="/login" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `nav-auth-btn ${isActive ? "active" : ""}`}>
+                Sign in
+              </NavLink>
             )}
           </li>
         </ul>

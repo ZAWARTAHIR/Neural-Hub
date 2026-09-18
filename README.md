@@ -1,16 +1,17 @@
 # Onefeed
 
-Internal marketing platform. A single prompt, sent from a dashboard chat
-panel, is turned into a blog post, images, a video, and a WhatsApp message.
-All of the generation logic lives in n8n — this project is just the
-interface and a thin backend that forwards requests to n8n webhooks.
+Internal marketing platform. A single prompt, sent from an authenticated
+dashboard chat panel, is turned into a blog post, images, a video, and a
+WhatsApp message. Generation logic lives in n8n, while Supabase handles
+authentication and user-owned persistence.
 
 ## Project structure
 
 ```
 onefeed-project/
 ├── frontend/     React app (Vite, component-based)
-└── backend/      Express app — routes + controllers only, no database
+├── backend/      Express app — routes + controllers that forward to n8n
+└── supabase/     Database, RLS and storage setup
 ```
 
 The two folders are independent. Each has its own `package.json` and its
@@ -59,17 +60,17 @@ owns all of that.
 
 ## Routes (frontend pages)
 
-| Path                       | Page                                    |
-|----------------------------|------------------------------------------|
-| `/`                        | Home — platform info                     |
-| `/about`                   | About                                     |
-| `/privacy-policy`          | Privacy Policy (placeholder text)        |
-| `/terms-and-conditions`    | Terms & Conditions (placeholder text)    |
-| `/dashboard`               | Dashboard — chat panel                   |
-| `/dashboard/blog`          | Blog section (empty for now)             |
-| `/dashboard/image`         | Image section (empty for now)            |
-| `/dashboard/video`         | Video section (empty for now)            |
-| `/dashboard/whatsapp`      | WhatsApp section (empty for now)         |
+| Path                    | Page                                  |
+| ----------------------- | ------------------------------------- |
+| `/`                     | Home — platform info                  |
+| `/about`                | About                                 |
+| `/privacy-policy`       | Privacy Policy (placeholder text)     |
+| `/terms-and-conditions` | Terms & Conditions (placeholder text) |
+| `/dashboard`            | Dashboard — chat panel                |
+| `/dashboard/blog`       | Blog section (empty for now)          |
+| `/dashboard/image`      | Image section (empty for now)         |
+| `/dashboard/video`      | Video section (empty for now)         |
+| `/dashboard/whatsapp`   | WhatsApp section (empty for now)      |
 
 The sidebar inside `/dashboard` can be opened and closed with the toggle
 button in the top bar, and it lists the four sections above.
@@ -80,8 +81,10 @@ button in the top bar, and it lists the four sections above.
 - npm (comes with Node)
 - Access to your n8n instance and its webhook URLs
 
-You do not need a database. You do not need to run anything else locally
-besides the two apps below.
+You need a Supabase project. Run `supabase/schema.sql` in the Supabase SQL
+Editor before using the dashboard. The SQL creates authentication-related
+profiles, chat history, generated asset records, row-level security policies,
+and a private `generated-assets` storage bucket.
 
 ## 1. Install dependencies
 
@@ -140,6 +143,8 @@ cp .env.example .env
 
 ```
 VITE_API_BASE_URL=http://localhost:5000/api
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
 Change this if the backend runs on a different host or port (for example,
@@ -189,6 +194,17 @@ npm start
 This runs the Express server directly with Node (no build step needed for
 the backend).
 
+## Supabase setup
+
+1. Create a project at Supabase.
+2. Copy the Project URL and anon key into `frontend/.env`.
+3. Run `supabase/schema.sql` in **SQL Editor**.
+4. In Authentication settings, choose whether email confirmation is required.
+5. Start the frontend and create an account at `/login`.
+
+The frontend uses the anon key with RLS. Never put the service-role key in
+frontend environment variables or commit either `.env` file.
+
 ## How the chat panel talks to n8n
 
 1. The dashboard chat panel (`ChatPanel.jsx`) sends the typed message to
@@ -199,6 +215,8 @@ the backend).
    the chat. The frontend expects a `reply` field in the response (for
    example `{ "reply": "..." }`) — adjust the n8n workflow's response
    shape, or adjust `ChatPanel.jsx`, so the two match.
+4. User and assistant messages are saved in Supabase `chat_messages` and
+   loaded again when that user returns.
 
 The blog, image, video and WhatsApp routes/controllers follow the exact
 same forwarding pattern and are ready to be called once those dashboard

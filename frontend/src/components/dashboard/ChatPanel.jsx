@@ -1,12 +1,38 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { sendChatMessage } from "../../lib/api.js";
+import { supabase } from "../../lib/supabase.js";
+import { useAuth } from "../../lib/AuthContext.jsx";
 
 export default function ChatPanel() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const textareaRef = useRef(null);
+
+  useEffect(() => {
+    async function loadMessages() {
+      if (!supabase || !user) return;
+      const { data, error: loadError } = await supabase
+        .from("chat_messages")
+        .select("role, content, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (!loadError && data) setMessages(data.map(({ role, content }) => ({ role, content })));
+    }
+    loadMessages();
+  }, [user]);
+
+  async function persistMessage(role, content) {
+    if (!supabase || !user) return;
+    const { error: saveError } = await supabase.from("chat_messages").insert({
+      user_id: user.id,
+      role,
+      content
+    });
+    if (saveError) setError("Your response was generated, but could not be saved.");
+  }
 
   async function handleSend() {
     const text = input.trim();
@@ -14,6 +40,7 @@ export default function ChatPanel() {
 
     const nextMessages = [...messages, { role: "user", content: text }];
     setMessages(nextMessages);
+    await persistMessage("user", text);
     setInput("");
     setError("");
     setLoading(true);
@@ -25,6 +52,7 @@ export default function ChatPanel() {
       const reply =
         typeof data?.reply === "string" ? data.reply : JSON.stringify(data);
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      await persistMessage("assistant", reply);
     } catch (err) {
       setError(
         "Could not reach the automation service. Check that the backend and the n8n webhook are running."
