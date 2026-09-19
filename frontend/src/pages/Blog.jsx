@@ -428,7 +428,7 @@ export default function Blog() {
                 <h3>Get the autonomous marketing playbook</h3>
                 <p>Join 15,000+ content leaders getting our weekly teardowns every Tuesday morning.</p>
               </div>
-              <div style={{ minWidth: "300px" }}>
+              <div className="blog-newsletter-form-wrap">
                 <form onSubmit={(e) => { e.preventDefault(); alert("Thanks for subscribing!"); }} style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="email"
