@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { isSupabaseConfigured, supabase } from "../lib/supabase.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 
@@ -57,9 +57,22 @@ export default function Login() {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <span className="mark" />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <Link to="/" className="logo" style={{ textDecoration: "none" }}>
+            <div className="mark-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
+              </svg>
+            </div>
+            <span>Onefeed</span>
+          </Link>
+          <Link to="/" style={{ fontSize: "13.5px", fontWeight: "700", color: "var(--text-muted)", textDecoration: "none" }}>
+            ← Back Home
+          </Link>
+        </div>
+
         <h1>{mode === "sign-in" ? "Welcome back" : "Create your workspace"}</h1>
-        <p className="auth-copy">Sign in to keep your campaigns and generated content together.</p>
+        <p className="auth-copy">Sign in to manage your multi-channel AI content and workflows.</p>
 
         {!isSupabaseConfigured && (
           <div className="auth-error">Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to frontend/.env first.</div>
@@ -69,15 +82,28 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <label>
-            Email
-            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            Email Address
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@company.com"
+              required
+            />
           </label>
           <label>
             Password
-            <input type="password" minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} required />
+            <input
+              type="password"
+              minLength={6}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="••••••••"
+              required
+            />
           </label>
           <button className="btn btn-blue" type="submit" disabled={busy || !isSupabaseConfigured}>
-            {busy ? "Please wait..." : mode === "sign-in" ? "Sign in" : "Create account"}
+            {busy ? "Please wait..." : mode === "sign-in" ? "Sign in to Dashboard" : "Create Account"}
           </button>
         </form>
 
