@@ -4,7 +4,7 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 
 export default function Login() {
-  const { user } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mode, setMode] = useState("sign-in");
@@ -14,7 +14,19 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user && isAdmin) return <Navigate to="/dashboard" replace />;
+
+  if (user && !isAdmin) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <h1>Admin access only</h1>
+          <p className="auth-copy">This workspace is restricted to the configured admin email.</p>
+          <button className="btn btn-blue" type="button" onClick={signOut}>Sign out</button>
+        </section>
+      </main>
+    );
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();

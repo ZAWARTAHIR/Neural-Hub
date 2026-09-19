@@ -6,7 +6,18 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   const [legalOpen, setLegalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 12);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -27,7 +38,7 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="navbar">
+    <header className={`navbar ${scrolled ? "scrolled" : ""}`}>
       <div className="shell">
         <NavLink to="/" className="logo">
           <span className="mark" />

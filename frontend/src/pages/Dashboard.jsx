@@ -6,7 +6,7 @@ import Footer from "../components/layout/Footer.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
 
 export default function Dashboard() {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 700);
 
@@ -16,7 +16,7 @@ export default function Dashboard() {
       <main>
         <div className="dashboard-shell" style={{ flexDirection: "column" }}>
           <div className="dash-body">
-            {user && (
+            {isAdmin && (
               <Sidebar
                 open={sidebarOpen}
                 onToggle={() => setSidebarOpen((v) => !v)}
@@ -25,7 +25,7 @@ export default function Dashboard() {
             <main className="dash-main">
               {loading ? (
                 <div className="auth-state">Loading your workspace...</div>
-              ) : user ? (
+              ) : isAdmin ? (
                 <Outlet />
               ) : (
                 <div className="dashboard-welcome">

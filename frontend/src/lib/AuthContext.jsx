@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "./supabase.js";
 
 const AuthContext = createContext(null);
+const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || "").trim().toLowerCase();
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -39,6 +40,7 @@ export function AuthProvider({ children }) {
       value={{
         session,
         user: session?.user ?? null,
+        isAdmin: Boolean(session?.user?.email && adminEmail && session.user.email.toLowerCase() === adminEmail),
         loading,
         configured: isSupabaseConfigured,
         signOut

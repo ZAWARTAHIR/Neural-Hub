@@ -7,6 +7,26 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.ai_blogs (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  excerpt text,
+  content text not null,
+  image_url text,
+  published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.ai_blogs enable row level security;
+
+drop policy if exists "Anyone can view published blog posts" on public.ai_blogs;
+create policy "Anyone can view published blog posts"
+  on public.ai_blogs for select
+  using (true);
+
+grant select on public.ai_blogs to anon, authenticated;
+
 create table if not exists public.chat_messages (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
