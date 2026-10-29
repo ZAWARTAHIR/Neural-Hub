@@ -1,10 +1,53 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Logo from "./Logo.jsx";
+import { Icon } from "../icons/Icons.jsx";
+import { getTheme, setTheme } from "../../lib/theme.js";
 
-export default function Footer() {
+const CTA_CHANNELS = [
+  { icon: "blog", tone: "amber" },
+  { icon: "image", tone: "coral" },
+  { icon: "video", tone: "ink" },
+  { icon: "whatsapp", tone: "teal" },
+];
+
+const COLUMNS = [
+  {
+    title: "Platform",
+    links: [
+      { to: "/", label: "Home Overview" },
+      { to: "/dashboard", label: "AI Studio Dashboard" },
+      { to: "/blog", label: "Engineering & Insights" },
+      { to: "/about", label: "About Onefeed" },
+    ],
+  },
+  {
+    title: "Channels",
+    links: [
+      { to: "/dashboard/blog", label: "Blog" },
+      { to: "/dashboard/image", label: "Image" },
+      { to: "/dashboard/video", label: "Video" },
+      { to: "/dashboard/whatsapp", label: "WhatsApp" },
+    ],
+  },
+  {
+    title: "Legal & Trust",
+    links: [
+      { to: "/privacy-policy", label: "Privacy Policy" },
+      { to: "/terms-and-conditions", label: "Terms of Service" },
+      { to: "/about#architecture", label: "Security & Architecture" },
+      { to: "/login", label: "Admin Portal" },
+    ],
+  },
+];
+
+export default function Footer({ showCta = true }) {
   const year = new Date().getFullYear();
+  const navigate = useNavigate();
+  const [brief, setBrief] = useState("");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [theme, setThemeState] = useState(getTheme);
 
   function handleSubscribe(e) {
     e.preventDefault();
@@ -15,63 +58,90 @@ export default function Footer() {
     }
   }
 
+  function handleBrief(e) {
+    e.preventDefault();
+    navigate("/dashboard", { state: { prompt: brief.trim() } });
+  }
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    setThemeState(next);
+  }
+
   return (
     <footer className="footer-v2">
       <div className="shell">
-        <div className="footer-v2-grid">
-          {/* Col 1: Brand & Status */}
-          <div className="footer-brand">
-            <Link to="/" className="logo">
-              <div className="mark-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
-                </svg>
+        {showCta && (
+          <section className="footer-cta" aria-labelledby="footer-cta-title">
+            <span className="tile-accents" aria-hidden="true" />
+            <div className="footer-cta-copy">
+              <div className="footer-cta-agents">
+                <span className="agent-stack">
+                  {CTA_CHANNELS.map((c) => (
+                    <span key={c.icon} className={`icon-tile tone-${c.tone}`}>
+                      <Icon name={c.icon} size={12} />
+                    </span>
+                  ))}
+                </span>
+                <span>4 channel agents, one brief</span>
               </div>
-              <span>Onefeed</span>
-              <span className="logo-tag">AI</span>
-            </Link>
-            <p>
-              The unified multi-channel AI marketing platform. Turn single prompts into blogs, visuals, videos, and broadcast messages.
-            </p>
+              <h2 id="footer-cta-title">Ready to revolutionize your marketing engine?</h2>
+              <p>
+                Open the studio dashboard, write a single prompt, and watch four high-impact channel assets generate in real-time.
+              </p>
+            </div>
+            <div className="footer-cta-action">
+              <form className="pill-form" onSubmit={handleBrief}>
+                <input
+                  type="text"
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                  placeholder="Describe your campaign…"
+                  aria-label="Describe your campaign"
+                />
+                <button type="submit" className="btn btn-blue">
+                  Open Studio
+                  <Icon name="arrowRight" size={16} strokeWidth={2} />
+                </button>
+              </form>
+              <p className="footer-cta-note">
+                <strong>50,000+</strong> marketing assets generated · 99.9% workflow uptime
+              </p>
+            </div>
+          </section>
+        )}
+
+        <div className="footer-v2-grid">
+          <div className="footer-brand">
+            <Logo />
+            <p className="footer-tagline">The unified multi-channel AI marketing platform.</p>
+            <p>Turn single prompts into blogs, visuals, videos, and broadcast messages.</p>
             <div className="footer-status-pill">
               <span className="pulse-dot green" />
               <span>All Systems Operational</span>
             </div>
           </div>
 
-          {/* Col 2: Platform Links */}
-          <div className="footer-col">
-            <h4>Platform</h4>
-            <ul className="footer-nav">
-              <li><Link to="/">Home Overview</Link></li>
-              <li><Link to="/dashboard">AI Studio Dashboard</Link></li>
-              <li><Link to="/blog">Engineering &amp; Insights</Link></li>
-              <li><Link to="/about">About Onefeed</Link></li>
-            </ul>
-          </div>
+          {COLUMNS.map((col) => (
+            <div key={col.title} className="footer-col">
+              <h4>{col.title}</h4>
+              <ul className="footer-nav">
+                {col.links.map((link) => (
+                  <li key={link.to}>
+                    <Link to={link.to}>{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-          {/* Col 3: Compliance & Legal */}
-          <div className="footer-col">
-            <h4>Legal &amp; Trust</h4>
-            <ul className="footer-nav">
-              <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-              <li><Link to="/terms-and-conditions">Terms of Service</Link></li>
-              <li><Link to="/about#architecture">Security &amp; Architecture</Link></li>
-              <li><Link to="/login">Admin Portal</Link></li>
-            </ul>
-          </div>
-
-          {/* Col 4: Newsletter */}
           <div className="footer-col">
             <h4>Get Product Updates</h4>
             <div className="newsletter-box">
-              <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "8px" }}>
-                Receive our latest AI workflow playbooks and feature releases.
-              </p>
+              <p>Receive our latest AI workflow playbooks and feature releases.</p>
               {subscribed ? (
-                <div style={{ background: "var(--lime-light)", color: "var(--lime-hover)", padding: "10px 14px", borderRadius: "6px", fontWeight: "700", fontSize: "13.5px", border: "1px solid var(--lime)" }}>
-                  ✓ You are subscribed to updates!
-                </div>
+                <div className="newsletter-success">✓ You are subscribed to updates!</div>
               ) : (
                 <form onSubmit={handleSubscribe} className="newsletter-form">
                   <input
@@ -81,6 +151,7 @@ export default function Footer() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="newsletter-input"
+                    aria-label="Email address"
                   />
                   <button type="submit" className="btn btn-blue btn-sm">
                     Join
@@ -91,11 +162,22 @@ export default function Footer() {
           </div>
         </div>
 
+        <div className="footer-wordmark" aria-hidden="true">Onefeed</div>
+
         <div className="footer-v2-bottom">
           <span>&copy; {year} Onefeed Technologies Inc. All rights reserved.</span>
-          <div style={{ display: "flex", gap: "18px", alignItems: "center" }}>
-            <span>Built for Modern Growth &amp; Content Teams</span>
-            <span style={{ color: "var(--blue)", fontWeight: "700" }}>v2.4.0</span>
+          <div className="footer-bottom-links">
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <Link to="/terms-and-conditions">Terms of Service</Link>
+            <span className="footer-version">v2.4.0</span>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
+            </button>
           </div>
         </div>
       </div>

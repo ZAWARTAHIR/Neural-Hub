@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Icon, BoltIcon, BrandIcon } from "../components/icons/Icons.jsx";
+import { BRAND_ICONS } from "../components/icons/brandIcons.js";
 
 const PRESET_PROMPTS = [
   {
     id: "sale",
-    title: "Summer Flash Sale 🛍️",
+    title: "Summer Flash Sale",
+    emoji: "🛍️",
     prompt: "Launch a 48-hour 40% OFF summer flash sale for our premium SaaS tier with urgency and social proof.",
     outputs: {
       blog: {
@@ -31,7 +34,8 @@ const PRESET_PROMPTS = [
   },
   {
     id: "product",
-    title: "AI 2.0 Product Update 🚀",
+    title: "AI 2.0 Product Update",
+    emoji: "🚀",
     prompt: "Announce our major Onefeed 2.0 release featuring autonomous multichannel generation and team collaboration.",
     outputs: {
       blog: {
@@ -58,7 +62,8 @@ const PRESET_PROMPTS = [
   },
   {
     id: "growth",
-    title: "Growth Marketing Playbook 📈",
+    title: "Growth Marketing Playbook",
+    emoji: "📈",
     prompt: "Share our top 5 content distribution strategies that helped us scale to 100k readers without paid ads.",
     outputs: {
       blog: {
@@ -85,6 +90,82 @@ const PRESET_PROMPTS = [
   }
 ];
 
+const CHANNELS = [
+  {
+    id: "blog",
+    label: "Blog",
+    tone: "amber",
+    name: "Long-Form SEO Blog",
+    badge: "Editorial Grade",
+    file: "blog-post.md",
+    desc: "Generate comprehensive, human-sounding articles complete with outline headings, key takeaways, SEO meta descriptions, and custom tone control.",
+    features: ["Deep semantic keyword integration", "Automatic Table of Contents & Anchor links", "Ready for WordPress, Webflow, and Supabase"]
+  },
+  {
+    id: "image",
+    label: "Image",
+    tone: "coral",
+    name: "On-Brand Campaign Visuals",
+    badge: "Multi-Ratio",
+    file: "campaign-visual.png",
+    desc: "Create high-impact visuals tailored for landscape web headers, square Instagram feeds, and vertical story layouts simultaneously.",
+    features: ["1:1 Square, 16:9 Landscape, 9:16 Vertical", "Consistent color harmonizing with your brand", "Ultra-sharp HD resolution ready to download"]
+  },
+  {
+    id: "video",
+    label: "Video",
+    tone: "ink",
+    name: "Short-Form Video Scripts",
+    badge: "Viral Hooks",
+    file: "video-script.md",
+    desc: "Turn your brief into high-retention video storyboards with 3-second scroll-stopping hooks, visual cues, and timed voiceover narration.",
+    features: ["Optimized for TikTok, Instagram Reels, and YT Shorts", "B-roll and footage direction markers", "Voiceover audio script with pacing markers"]
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    tone: "teal",
+    name: "WhatsApp & Direct Broadcasts",
+    badge: "High Open Rate",
+    file: "whatsapp-broadcast.txt",
+    desc: "High-converting direct response messages formatted with bold highlights, bullet markers, emojis, and tracked call-to-action links.",
+    features: ["WhatsApp markdown formatted (*bold*, _italic_)", "Segmented for VIP customers, leads, or communities", "Instant copy button for zero-delay sending"]
+  }
+];
+
+const PLATFORM_CARDS = [
+  {
+    icon: "review",
+    tone: "sand",
+    name: "Unified Review Dashboard",
+    badge: "You approve",
+    desc: "Every piece of generated content can be inspected, tweaked, regenerated, or approved with a single click before going to external channels."
+  },
+  {
+    icon: "lock",
+    tone: "sand",
+    name: "Private by Default",
+    badge: "Encrypted",
+    desc: "Prompt briefs and workspace assets are stored with role-based access control, encrypted in transit and at rest, and never used to train public models."
+  }
+];
+
+const FORMAT_ROWS = [
+  ["SEO blog posts", "Key takeaways", "Table of contents", "Meta descriptions", "Custom tone control", "WordPress-ready", "Webflow-ready", "Supabase-ready"],
+  ["1:1 Square", "16:9 Landscape", "9:16 Vertical", "Web headers", "Instagram feeds", "Story layouts", "HD downloads", "Brand color harmony"],
+  ["TikTok hooks", "Instagram Reels", "YouTube Shorts", "B-roll markers", "Voiceover scripts", "WhatsApp *bold* formatting", "VIP segments", "Tracked CTA links"]
+];
+
+const PUBLISH_TARGETS = ["wordpress", "webflow", "supabase", "instagram", "tiktok", "youtubeshorts", "whatsapp"];
+
+const COMPARISON = [
+  { task: "Briefing writers, designers & video editors", old: "3–5 days delay" },
+  { task: "Consistent messaging across every channel", old: "Inconsistent", oldMuted: true },
+  { task: "Tools and logins to manage", old: "6 SaaS subscriptions" },
+  { task: "Feedback and file versions", old: "Endless Slack threads" },
+  { task: "Review & edit before publishing", old: "Scattered across tools", oldMuted: true }
+];
+
 const FAQS = [
   {
     q: "How does Onefeed generate four distinct channels from a single prompt?",
@@ -108,484 +189,596 @@ const FAQS = [
   }
 ];
 
+const channelById = Object.fromEntries(CHANNELS.map((c) => [c.id, c]));
+
 export default function Home() {
   const [selectedPromptId, setSelectedPromptId] = useState("sale");
   const [activeTab, setActiveTab] = useState("blog");
-  const [openFaq, setOpenFaq] = useState(0);
 
   const activePrompt = PRESET_PROMPTS.find((p) => p.id === selectedPromptId) || PRESET_PROMPTS[0];
+
+  return (
+    <div className="home">
+      <Hero />
+      <StudioPreview
+        activePrompt={activePrompt}
+        onSelectPrompt={setSelectedPromptId}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+      />
+      <StepBrief activePrompt={activePrompt} onSelectPrompt={setSelectedPromptId} />
+      <StepGenerate />
+      <StepPublish />
+      <CampaignExamples />
+      <SampleOutputs />
+      <Comparison />
+      <JournalPromo />
+      <Faq />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function Hero() {
+  const navigate = useNavigate();
+  const [brief, setBrief] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    navigate("/dashboard", { state: { prompt: brief.trim() } });
+  }
+
+  return (
+    <section className="ok-hero">
+      <span className="tile-accents" aria-hidden="true" />
+      <div className="ok-container ok-hero-inner">
+        <Link to="/about" className="announce-card">
+          <strong>Next-Gen Multi-Channel AI Platform</strong>
+          <span>Blog · Image · Video · WhatsApp from one brief</span>
+        </Link>
+
+        <span className="hero-mark" aria-hidden="true">
+          <BoltIcon size={30} />
+        </span>
+
+        <h1>One prompt. Every channel, handled.</h1>
+        <p className="ok-hero-sub">
+          Onefeed turns a single brief into a publication-ready blog post, stunning campaign visuals, engaging video scripts, and formatted WhatsApp broadcasts in seconds.
+        </p>
+
+        <form className="pill-form ok-hero-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="Describe your campaign…"
+            aria-label="Describe your campaign"
+          />
+          <button type="submit" className="btn btn-blue">
+            Open Studio
+            <Icon name="arrowRight" size={16} strokeWidth={2} />
+          </button>
+        </form>
+        <p className="ok-hero-note">No prompt engineering required · Review everything before it ships</p>
+
+        <p className="ok-hero-agents-label">Onefeed runs 4 channel agents in parallel</p>
+        <div className="ok-hero-agents">
+          {CHANNELS.map((c) => (
+            <Link key={c.id} to={`/dashboard/${c.id}`} className="hero-agent">
+              <span className={`icon-tile tone-${c.tone}`}>
+                <Icon name={c.id} size={20} />
+              </span>
+              <span className="hero-agent-label">{c.label}</span>
+              <span className="hero-agent-tip" role="tooltip">{c.desc}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="format-marquee">
+        <p className="format-marquee-label">50,000+ marketing assets generated · formatted for every channel</p>
+        {FORMAT_ROWS.map((row, i) => (
+          <div key={i} className={`marquee-row ${i % 2 ? "reverse" : ""}`}>
+            <div className="marquee-track">
+              {[...row, ...row].map((chip, j) => (
+                <span key={j} className="format-chip" aria-hidden={j >= row.length}>
+                  <span className={`chip-dot tone-${CHANNELS[(i + j) % 4].tone}`} />
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function StudioPreview({ activePrompt, onSelectPrompt, activeTab, onSelectTab }) {
   const activeOutput = activePrompt.outputs[activeTab];
 
   return (
-    <>
-      {/* ============================================================
-          HERO SECTION (Split Layout with Live Interactive Simulator)
-          ============================================================ */}
-      <section className="hero-v2">
-        <div className="shell">
-          <div className="hero-v2-grid">
-            {/* Left Column: Copy & CTAs */}
-            <div className="hero-v2-content">
-              <div className="badge-pill blue">
-                <span className="pulse-dot" />
-                <span>Next-Gen Multi-Channel AI Platform</span>
+    <section className="ok-section studio-preview-section" aria-label="Onefeed studio preview">
+      <div className="ok-container">
+        <div className="studio-frame">
+          <div className="studio-topbar">
+            <span className="studio-workspace">
+              <span className="studio-avatar">O</span>
+              Onefeed Studio
+              <Icon name="chevronDown" size={12} strokeWidth={2} />
+            </span>
+            <span className="studio-live">
+              <span className="pulse-dot green" />4 agents ready
+            </span>
+            <span className="studio-stat">Assets <b>50K+</b></span>
+            <span className="studio-stat">Uptime <b>99.9%</b></span>
+            <span className="studio-stat hide-sm">Speed <b>10x</b></span>
+            <span className="studio-stat hide-sm">Channels <b>4-in-1</b></span>
+          </div>
+
+          <div className="studio-body">
+            <aside className="studio-side">
+              <div className="studio-side-head">
+                Briefs <small>{PRESET_PROMPTS.length}</small>
               </div>
+              {PRESET_PROMPTS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`studio-side-item ${p.id === activePrompt.id ? "active" : ""}`}
+                  onClick={() => onSelectPrompt(p.id)}
+                >
+                  <Icon name="file" size={14} />
+                  <span>{p.title}</span>
+                </button>
+              ))}
 
-              <h1>
-                One prompt. <span className="highlight-text">Every channel</span>, handled.
-              </h1>
-
-              <p className="hero-desc">
-                Onefeed turns a single brief into a publication-ready <strong>Blog Post</strong>, stunning <strong>Campaign Visuals</strong>, engaging <strong>Video Scripts</strong>, and formatted <strong>WhatsApp Broadcasts</strong> in seconds.
-              </p>
-
-              <div className="hero-v2-cta">
-                <Link to="/dashboard" className="btn btn-blue btn-lg">
-                  <span>Open Studio Dashboard</span>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </Link>
-                <Link to="/about" className="btn btn-yellow btn-lg">
-                  <span>Explore Architecture</span>
-                </Link>
+              <div className="studio-side-head">
+                Channels <small>{CHANNELS.length}</small>
               </div>
+              {CHANNELS.map((c) => (
+                <div key={c.id} className="studio-side-item static">
+                  <span className={`chip-dot tone-${c.tone}`} />
+                  <span>{c.label}</span>
+                </div>
+              ))}
 
-              <div className="hero-trust-bar">
-                <div className="trust-avatars">
-                  <div className="trust-avatar">🚀</div>
-                  <div className="trust-avatar">⚡</div>
-                  <div className="trust-avatar">💡</div>
-                  <div className="trust-avatar">🔥</div>
-                </div>
-                <div className="trust-text">
-                  <strong>50,000+</strong> marketing assets generated with 99.9% publishing reliability.
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Live Interactive Demo Simulator */}
-            <div className="hero-playground">
-              <div className="playground-header">
-                <div className="window-controls">
-                  <span className="win-dot red" />
-                  <span className="win-dot yellow" />
-                  <span className="win-dot green" />
-                </div>
-                <div className="playground-title">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                    <line x1="8" y1="21" x2="16" y2="21"/>
-                    <line x1="12" y1="17" x2="12" y2="21"/>
-                  </svg>
-                  <span>Live Prompt Simulator</span>
-                </div>
-                <span className="badge-pill" style={{ padding: "2px 8px", fontSize: "11px", background: "var(--lime-light)", color: "var(--lime-hover)" }}>
-                  ● Ready
+              <div className="studio-user">
+                <span className="studio-avatar lg">O</span>
+                <span>
+                  <strong>Onefeed Team</strong>
+                  <small>Studio workspace</small>
                 </span>
               </div>
+            </aside>
 
-              <div className="playground-body">
-                {/* Preset Chips */}
-                <div className="playground-prompt-box">
-                  <div className="prompt-label">
-                    <span>Input Brief</span>
-                    <span style={{ color: "var(--blue)" }}>Click to simulate ▾</span>
-                  </div>
-                  <div className="prompt-input-text">
-                    "{activePrompt.prompt}"
-                  </div>
-                  <div className="prompt-chips">
-                    {PRESET_PROMPTS.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={`prompt-chip ${p.id === selectedPromptId ? "active" : ""}`}
-                        onClick={() => setSelectedPromptId(p.id)}
-                      >
-                        {p.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="studio-main">
+              <div className="studio-welcome">
+                <h3>Welcome back.</h3>
+                <p>4 assets are ready for review. Approve, edit, or regenerate.</p>
+              </div>
 
-                {/* Channel Selector Tabs */}
-                <div className="playground-tabs">
+              <div className="studio-brief">
+                <span className="studio-label">Input brief</span>
+                <p>"{activePrompt.prompt}"</p>
+              </div>
+
+              <div className="studio-list-head">
+                <span>Today</span>
+                <span className="studio-progress">
+                  <span className="studio-progress-bar" />4 of 4 generated
+                </span>
+              </div>
+              <div className="studio-list">
+                {CHANNELS.map((c) => (
                   <button
+                    key={c.id}
                     type="button"
-                    className={`tab-btn tab-blog ${activeTab === "blog" ? "active" : ""}`}
-                    onClick={() => setActiveTab("blog")}
+                    className={`studio-row ${activeTab === c.id ? "active" : ""}`}
+                    onClick={() => onSelectTab(c.id)}
                   >
-                    📝 Blog
+                    <span className={`icon-tile sm tone-${c.tone}`}>
+                      <Icon name={c.id} size={14} />
+                    </span>
+                    <span className="studio-row-text">
+                      <span className="studio-row-kind">{c.label} ·</span> {activePrompt.outputs[c.id].title}
+                    </span>
+                    <span className="studio-row-action">{activeTab === c.id ? "Previewing" : "Preview"}</span>
                   </button>
-                  <button
-                    type="button"
-                    className={`tab-btn tab-image ${activeTab === "image" ? "active" : ""}`}
-                    onClick={() => setActiveTab("image")}
-                  >
-                    🎨 Image
-                  </button>
-                  <button
-                    type="button"
-                    className={`tab-btn tab-video ${activeTab === "video" ? "active" : ""}`}
-                    onClick={() => setActiveTab("video")}
-                  >
-                    🎬 Video
-                  </button>
-                  <button
-                    type="button"
-                    className={`tab-btn tab-whatsapp ${activeTab === "whatsapp" ? "active" : ""}`}
-                    onClick={() => setActiveTab("whatsapp")}
-                  >
-                    💬 WhatsApp
-                  </button>
-                </div>
-
-                {/* Output Preview */}
-                <div className="playground-preview-window">
-                  <span className={`output-tag tag-${activeTab}`}>
-                    {activeTab.toUpperCase()} OUTPUT GENERATED
-                  </span>
-                  <h4 style={{ fontSize: "16px", marginBottom: "8px", color: "var(--ink)" }}>
-                    {activeOutput.title}
-                  </h4>
-                  <p style={{ color: "var(--ink-soft)", fontSize: "13.5px", lineHeight: "1.55", marginBottom: "12px" }}>
-                    {activeOutput.snippet}
-                  </p>
-                  <div style={{ fontSize: "11.5px", fontWeight: "700", color: "var(--text-muted)", borderTop: "1px dashed var(--grey-dark)", paddingTop: "8px" }}>
-                    ⚡ {activeOutput.meta}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
+
+            <aside className="studio-preview">
+              <div className="studio-preview-tab">
+                <Icon name="chat" size={13} /> Preview
+              </div>
+              <div className="studio-preview-body">
+                <span className={`output-tag tag-${activeTab}`}>{channelById[activeTab].label} output generated</span>
+                <h4>{activeOutput.title}</h4>
+                <p>{activeOutput.snippet}</p>
+                <div className="studio-preview-meta">⚡ {activeOutput.meta}</div>
+              </div>
+              <div className="studio-preview-actions">
+                <span className="studio-btn ghost">Regenerate</span>
+                <span className="studio-btn">Approve</span>
+              </div>
+            </aside>
           </div>
         </div>
-      </section>
-
-      {/* ============================================================
-          STATS PROOF STRIP
-          ============================================================ */}
-      <section className="stats-strip">
-        <div className="shell">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-number">10x</div>
-              <div className="stat-label">Faster Production</div>
-              <div className="stat-sub">From brief to 4 finished channels</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">4-in-1</div>
-              <div className="stat-label">Channels Synchronized</div>
-              <div className="stat-sub">Zero manual copy-pasting</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">50k+</div>
-              <div className="stat-label">Generated Assets</div>
-              <div className="stat-sub">Used across active campaigns</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">99.9%</div>
-              <div className="stat-label">Workflow Uptime</div>
-              <div className="stat-sub">Enterprise-grade reliability</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-          MULTI-CHANNEL FEATURE SHOWCASE (4 CHANNELS)
-          ============================================================ */}
-      <section className="sec" style={{ background: "var(--paper-soft)" }}>
-        <div className="shell">
-          <div className="sec-head center">
-            <div className="badge-pill" style={{ background: "var(--yellow)" }}>
-              <span>Multi-Channel Studio</span>
-            </div>
-            <h2>Four outputs. One unified workspace.</h2>
-            <p>
-              Stop juggling 5 disconnected tools. Onefeed orchestrates your entire content pipeline from a single command center.
-            </p>
-          </div>
-
-          <div className="channel-grid">
-            {/* Channel 1: Blog */}
-            <div className="channel-card card-blog">
-              <div className="channel-card-head">
-                <div className="channel-title">
-                  <span>📝</span>
-                  <span>Long-Form SEO Blog</span>
-                </div>
-                <span className="channel-badge">Editorial Grade</span>
-              </div>
-              <div className="channel-card-body">
-                <p>
-                  Generate comprehensive, human-sounding articles complete with outline headings, key takeaways, SEO meta descriptions, and custom tone control.
-                </p>
-                <ul className="channel-feature-list">
-                  <li><span className="check-icon">✓</span> Deep semantic keyword integration</li>
-                  <li><span className="check-icon">✓</span> Automatic Table of Contents &amp; Anchor links</li>
-                  <li><span className="check-icon">✓</span> Ready for WordPress, Webflow, and Supabase</li>
-                </ul>
-                <div className="channel-mockup">
-                  <strong>Preview:</strong> <em>"How AI is Revolutionizing Content Creation in 2025"</em> (1,850 words • 8 min read)
-                </div>
-              </div>
-            </div>
-
-            {/* Channel 2: Image */}
-            <div className="channel-card card-image">
-              <div className="channel-card-head">
-                <div className="channel-title">
-                  <span>🎨</span>
-                  <span>On-Brand Campaign Visuals</span>
-                </div>
-                <span className="channel-badge">Multi-Ratio</span>
-              </div>
-              <div className="channel-card-body">
-                <p>
-                  Create high-impact visuals tailored for landscape web headers, square Instagram feeds, and vertical story layouts simultaneously.
-                </p>
-                <ul className="channel-feature-list">
-                  <li><span className="check-icon">✓</span> 1:1 Square, 16:9 Landscape, 9:16 Vertical</li>
-                  <li><span className="check-icon">✓</span> Consistent color harmonizing with your brand</li>
-                  <li><span className="check-icon">✓</span> Ultra-sharp HD resolution ready to download</li>
-                </ul>
-                <div className="channel-mockup">
-                  <strong>Preview:</strong> <em>3D isometric campaign graphics with dynamic lighting &amp; typography</em>
-                </div>
-              </div>
-            </div>
-
-            {/* Channel 3: Video */}
-            <div className="channel-card card-video">
-              <div className="channel-card-head">
-                <div className="channel-title">
-                  <span>🎬</span>
-                  <span>Short-Form Video Scripts</span>
-                </div>
-                <span className="channel-badge">Viral Hooks</span>
-              </div>
-              <div className="channel-card-body">
-                <p>
-                  Turn your brief into high-retention video storyboards with 3-second scroll-stopping hooks, visual cues, and timed voiceover narration.
-                </p>
-                <ul className="channel-feature-list">
-                  <li><span className="check-icon">✓</span> Optimized for TikTok, Instagram Reels, and YT Shorts</li>
-                  <li><span className="check-icon">✓</span> B-roll and footage direction markers</li>
-                  <li><span className="check-icon">✓</span> Voiceover audio script with pacing markers</li>
-                </ul>
-                <div className="channel-mockup">
-                  <strong>Preview:</strong> <em>[0-3s] Hook → [4-15s] Solution Demo → [16-20s] Final CTA</em>
-                </div>
-              </div>
-            </div>
-
-            {/* Channel 4: WhatsApp */}
-            <div className="channel-card card-whatsapp">
-              <div className="channel-card-head">
-                <div className="channel-title">
-                  <span>💬</span>
-                  <span>WhatsApp &amp; Direct Broadcasts</span>
-                </div>
-                <span className="channel-badge">High Open Rate</span>
-              </div>
-              <div className="channel-card-body">
-                <p>
-                  High-converting direct response messages formatted with bold highlights, bullet markers, emojis, and tracked call-to-action links.
-                </p>
-                <ul className="channel-feature-list">
-                  <li><span className="check-icon">✓</span> WhatsApp markdown formatted (*bold*, _italic_)</li>
-                  <li><span className="check-icon">✓</span> Segmented for VIP customers, leads, or communities</li>
-                  <li><span className="check-icon">✓</span> Instant copy button for zero-delay sending</li>
-                </ul>
-                <div className="channel-mockup">
-                  <strong>Preview:</strong> <em>⚡ Exclusive VIP flash drop announcement with instant tap-to-claim link</em>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-          WORKFLOW PIPELINE ("How It Works")
-          ============================================================ */}
-      <section className="sec">
-        <div className="shell">
-          <div className="sec-head center">
-            <div className="badge-pill" style={{ background: "var(--blue-light)", color: "var(--blue-hover)" }}>
-              <span>Autonomous Workflow</span>
-            </div>
-            <h2>How the engine turns 1 into 4</h2>
-            <p>From a casual thought to four ready-to-publish assets in under 30 seconds.</p>
-          </div>
-
-          <div className="pipeline-grid">
-            <div className="pipeline-step">
-              <div className="step-badge">1</div>
-              <span className="step-pill">Input Stage</span>
-              <h3>Submit a Brief in Plain English</h3>
-              <p>
-                Type a campaign goal, product update, or paste raw notes in the Onefeed studio chat. No complex prompt engineering required.
-              </p>
-            </div>
-
-            <div className="pipeline-step">
-              <div className="step-badge">2</div>
-              <span className="step-pill">AI Orchestration</span>
-              <h3>Multimodal Agents Run in Parallel</h3>
-              <p>
-                Autonomous workflows process your request simultaneously: copywriters craft the blog, vision engines render images, and scriptwriters structure the video.
-              </p>
-            </div>
-
-            <div className="pipeline-step">
-              <div className="step-badge">3</div>
-              <span className="step-pill">Publishing Control</span>
-              <h3>Review, Polish &amp; Ship</h3>
-              <p>
-                Everything lands neatly in your color-coded dashboard. Review each asset, make any quick adjustments, and push to live channels with total confidence.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-          COMPARISON: OLD MANUAL WAY VS ONEFEED
-          ============================================================ */}
-      <section className="sec" style={{ background: "var(--paper-soft)" }}>
-        <div className="shell">
-          <div className="sec-head center">
-            <div className="badge-pill" style={{ background: "var(--lime-light)", color: "var(--lime-hover)" }}>
-              <span>Efficiency Comparison</span>
-            </div>
-            <h2>Why modern teams switch to Onefeed</h2>
-            <p>See how traditional marketing workflows compare to the Onefeed engine.</p>
-          </div>
-
-          <div className="comparison-grid">
-            {/* Old Way */}
-            <div className="comp-card old">
-              <div className="comp-card-head">
-                <span style={{ fontSize: "24px" }}>❌</span>
-                <h3>The Disconnected Way</h3>
-              </div>
-              <ul className="comp-list">
-                <li>
-                  <span className="comp-icon">⚠️</span>
-                  <span>Writing separate briefs for writers, designers, and video editors (3–5 days delay).</span>
-                </li>
-                <li>
-                  <span className="comp-icon">⚠️</span>
-                  <span>Inconsistent messaging across blog, social channels, and WhatsApp.</span>
-                </li>
-                <li>
-                  <span className="comp-icon">⚠️</span>
-                  <span>Switching between 6 different SaaS subscriptions and logins.</span>
-                </li>
-                <li>
-                  <span className="comp-icon">⚠️</span>
-                  <span>Endless Slack feedback threads and lost file versions.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Onefeed Way */}
-            <div className="comp-card onefeed">
-              <div className="comp-card-head">
-                <span style={{ fontSize: "24px" }}>⚡</span>
-                <h3>The Onefeed Advantage</h3>
-              </div>
-              <ul className="comp-list">
-                <li>
-                  <span className="comp-icon">✅</span>
-                  <span><strong>1 single brief</strong> produces all 4 channel assets in under 30 seconds.</span>
-                </li>
-                <li>
-                  <span className="comp-icon">✅</span>
-                  <span><strong>100% Brand Consistency:</strong> All outputs inherit identical campaign DNA.</span>
-                </li>
-                <li>
-                  <span className="comp-icon">✅</span>
-                  <span><strong>Unified Dashboard:</strong> Review, edit, and manage all formats in one place.</span>
-                </li>
-                <li>
-                  <span className="comp-icon">✅</span>
-                  <span><strong>Massive Cost &amp; Time Savings:</strong> Move from idea to launch on the same day.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-          INTERACTIVE FAQ ACCORDION
-          ============================================================ */}
-      <section className="sec">
-        <div className="shell">
-          <div className="sec-head center">
-            <div className="badge-pill" style={{ background: "var(--yellow)" }}>
-              <span>Frequently Asked Questions</span>
-            </div>
-            <h2>Got questions? We've got answers.</h2>
-            <p>Everything you need to know about getting started with Onefeed.</p>
-          </div>
-
-          <div className="faq-grid">
-            {FAQS.map((faq, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div key={idx} className={`faq-item ${isOpen ? "open" : ""}`}>
-                  <button
-                    type="button"
-                    className="faq-trigger"
-                    onClick={() => setOpenFaq(isOpen ? -1 : idx)}
-                    aria-expanded={isOpen}
-                  >
-                    <span>{faq.q}</span>
-                    <span className="faq-icon">{isOpen ? "−" : "+"}</span>
-                  </button>
-                  {isOpen && (
-                    <div className="faq-answer">
-                      <p>{faq.a}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
-          HIGH-IMPACT CLOSER CTA
-          ============================================================ */}
-      <section className="closer-v2">
-        <div className="shell">
-          <div className="badge-pill" style={{ background: "#ffffff", color: "#000000" }}>
-            <span>⚡ Instant Launch Ready</span>
-          </div>
-          <h2>Ready to revolutionize your marketing engine?</h2>
-          <p>
-            Open the studio dashboard, write a single prompt, and watch four high-impact channel assets generate in real-time.
-          </p>
-          <div className="closer-v2-actions">
-            <Link to="/dashboard" className="btn btn-yellow btn-lg">
-              <span>Open Studio Dashboard</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </Link>
-            <Link to="/blog" className="btn btn-outline btn-lg" style={{ color: "#000" }}>
-              <span>Read Case Studies</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
+
+function StepBrief({ activePrompt, onSelectPrompt }) {
+  return (
+    <section className="ok-section step-brief">
+      <div className="ok-container step-brief-grid">
+        <div className="step-brief-copy">
+          <span className="step-chip">Step 1 — Brief</span>
+          <h2 className="ok-h2">Submit a brief in plain English</h2>
+          <p className="ok-lead">
+            Type a campaign goal, product update, or paste raw notes in the Onefeed studio chat. No complex prompt engineering required.
+          </p>
+          <div className="pill-tabs" role="tablist" aria-label="Example briefs">
+            {PRESET_PROMPTS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="tab"
+                aria-selected={p.id === activePrompt.id}
+                className={`pill-tab ${p.id === activePrompt.id ? "active" : ""}`}
+                onClick={() => onSelectPrompt(p.id)}
+              >
+                {p.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <article className="brief-doc">
+          <header>
+            <h3>Campaign Brief</h3>
+            <p>
+              <Icon name="calendar" size={13} /> Generated today · {activePrompt.title}
+            </p>
+          </header>
+          <h4>Goal</h4>
+          <p>{activePrompt.prompt}</p>
+          {CHANNELS.map((c) => (
+            <div key={c.id} className="brief-doc-block">
+              <h4>{c.name}</h4>
+              <p>{activePrompt.outputs[c.id].title}</p>
+              <small>{activePrompt.outputs[c.id].meta}</small>
+            </div>
+          ))}
+        </article>
+      </div>
+
+      <div className="step-connector" aria-hidden="true" />
+      <div className="handoff-card">
+        <span className="ok-eyebrow">The handoff</span>
+        <p>One brief feeds all four agents, so every output inherits identical campaign DNA.</p>
+        <div className="file-chips">
+          {CHANNELS.map((c) => (
+            <span key={c.id} className="file-chip">
+              <Icon name="file" size={12} />
+              {c.file}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="step-connector arrow" aria-hidden="true">
+        <Icon name="arrowDown" size={14} />
+      </div>
+    </section>
+  );
+}
+
+function StepGenerate() {
+  return (
+    <section className="ok-section step-generate">
+      <div className="ok-container">
+        <div className="ok-head center">
+          <span className="step-chip">Step 2 — Generate</span>
+          <h2 className="ok-h2">Multimodal agents run in parallel, channel by channel.</h2>
+          <p className="ok-lead">
+            Autonomous workflows process your request simultaneously: copywriters craft the blog, vision engines render images, and scriptwriters structure the video.
+          </p>
+        </div>
+
+        <div className="agent-grid">
+          {CHANNELS.map((c) => (
+            <article key={c.id} className="agent-card">
+              <span className="checker" aria-hidden="true" />
+              <span className={`icon-tile tone-${c.tone}`}>
+                <Icon name={c.id} size={20} />
+              </span>
+              <h3>
+                {c.name} <span className="mini-badge">{c.badge}</span>
+              </h3>
+              <p>{c.desc}</p>
+              <ul className="agent-features">
+                {c.features.map((f) => (
+                  <li key={f}>
+                    <Icon name="review" size={14} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+          {PLATFORM_CARDS.map((card) => (
+            <article key={card.name} className="agent-card">
+              <span className="checker" aria-hidden="true" />
+              <span className={`icon-tile tone-${card.tone}`}>
+                <Icon name={card.icon} size={20} />
+              </span>
+              <h3>
+                {card.name} <span className="mini-badge">{card.badge}</span>
+              </h3>
+              <p>{card.desc}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+      <div className="step-connector arrow tall" aria-hidden="true">
+        <Icon name="arrowDown" size={14} />
+      </div>
+    </section>
+  );
+}
+
+function StepPublish() {
+  return (
+    <section className="ok-section step-publish">
+      <div className="ok-container">
+        <div className="ok-head center">
+          <span className="step-chip">Step 3 — Publish</span>
+          <h2 className="ok-h2">
+            Review, polish &amp; ship.
+            <br className="br-desktop" /> Publish where your audience is.
+          </h2>
+          <p className="ok-lead">
+            Everything lands neatly in your dashboard. Review each asset, make any quick adjustments, and push to live channels with total confidence.
+          </p>
+        </div>
+
+        <div className="publish-grid">
+          {PUBLISH_TARGETS.map((id) => (
+            <div key={id} className="publish-tile">
+              <span className="publish-icon">
+                <BrandIcon id={id} size={22} />
+              </span>
+              <span>{BRAND_ICONS[id].name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CampaignExamples() {
+  const [index, setIndex] = useState(0);
+  const last = PRESET_PROMPTS.length - 1;
+
+  return (
+    <section className="ok-section stories">
+      <div className="ok-container">
+        <div className="ok-head center">
+          <p className="ok-kicker">Campaign examples</p>
+          <h2 className="ok-h2">One brief. Four finished assets.</h2>
+          <p className="ok-lead">
+            See how a single prompt becomes a blog post, campaign visual, video script, and WhatsApp broadcast, ready to review.
+          </p>
+          <Link to="/dashboard" className="text-link">
+            Try it in the studio <Icon name="arrowRight" size={15} strokeWidth={2} />
+          </Link>
+        </div>
+      </div>
+
+      <div className="story-viewport">
+        <div className="story-track" style={{ "--slide": index }}>
+          {PRESET_PROMPTS.map((p, i) => (
+            <article key={p.id} className={`story-card ${i === index ? "active" : ""}`} aria-hidden={i !== index}>
+              <div className="story-copy">
+                <div className="story-brand">
+                  <span className="story-logo">{p.emoji}</span>
+                  <span>
+                    <strong>{p.title}</strong>
+                    <small>Campaign brief</small>
+                  </span>
+                </div>
+                <h3>{p.outputs.blog.title}</h3>
+                <div className="story-stat">
+                  <span>4 assets</span>
+                  <small>Blog · Visual · Video · WhatsApp</small>
+                </div>
+                <Link to="/dashboard" className="text-link" tabIndex={i === index ? 0 : -1}>
+                  Open in studio <Icon name="arrowRight" size={15} strokeWidth={2} />
+                </Link>
+              </div>
+              <div className={`story-visual v${i % 3}`}>
+                <p>“{p.prompt}”</p>
+                <div className="story-visual-chips">
+                  {CHANNELS.map((c) => (
+                    <span key={c.id}>{c.label}</span>
+                  ))}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div className="story-controls">
+        <button type="button" className="round-btn" onClick={() => setIndex((i) => Math.max(0, i - 1))} disabled={index === 0} aria-label="Previous example">
+          <Icon name="arrowLeft" size={16} />
+        </button>
+        <div className="story-dots">
+          {PRESET_PROMPTS.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              className={i === index ? "active" : ""}
+              onClick={() => setIndex(i)}
+              aria-label={`Show ${p.title}`}
+              aria-current={i === index}
+            />
+          ))}
+        </div>
+        <button type="button" className="round-btn" onClick={() => setIndex((i) => Math.min(last, i + 1))} disabled={index === last} aria-label="Next example">
+          <Icon name="arrowRight" size={16} />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function SampleOutputs() {
+  const samples = PRESET_PROMPTS.flatMap((p) =>
+    CHANNELS.map((c) => ({ key: `${p.id}-${c.id}`, channel: c, campaign: p.title, text: p.outputs[c.id].snippet }))
+  );
+  const rows = [samples.filter((_, i) => i % 2 === 0), samples.filter((_, i) => i % 2 === 1)];
+
+  return (
+    <section className="ok-section samples">
+      <p className="ok-kicker wide">Sample outputs</p>
+      <h2 className="ok-h2 sm center">Written once. Ready everywhere.</h2>
+      <div className="samples-rows">
+        {rows.map((row, i) => (
+          <div key={i} className={`marquee-row slow ${i ? "reverse" : ""}`}>
+            <div className="marquee-track">
+              {[...row, ...row].map((s, j) => (
+                <figure key={`${s.key}-${j}`} className="sample-card" aria-hidden={j >= row.length}>
+                  <blockquote>“{s.text}”</blockquote>
+                  <figcaption>
+                    <span className={`icon-tile xs tone-${s.channel.tone}`}>
+                      <Icon name={s.channel.id} size={11} />
+                    </span>
+                    <span>
+                      <strong>{s.channel.label}</strong>
+                      <small>{s.campaign}</small>
+                    </span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Comparison() {
+  return (
+    <section className="ok-section compare">
+      <div className="ok-container">
+        <div className="ok-head center">
+          <span className="step-chip">From 3–5 days to under 30 seconds</span>
+          <h2 className="ok-h2">Why modern teams switch to Onefeed</h2>
+        </div>
+        <div className="compare-scroll">
+          <div className="compare-table" role="table" aria-label="The disconnected way compared with Onefeed">
+            <div className="compare-row head" role="row">
+              <span role="columnheader">What needs doing</span>
+              <span role="columnheader">The disconnected way</span>
+              <span role="columnheader" className="good">With Onefeed</span>
+            </div>
+            {COMPARISON.map((row) => (
+              <div key={row.task} className="compare-row" role="row">
+                <span role="cell">{row.task}</span>
+                <span role="cell" className={row.oldMuted ? "muted" : ""}>{row.old}</span>
+                <span role="cell" className="good">
+                  <Icon name="checkCircle" size={16} />
+                </span>
+              </div>
+            ))}
+            <div className="compare-row total" role="row">
+              <span role="cell">Idea to launch</span>
+              <span role="cell" className="bad">3–5 days</span>
+              <span role="cell" className="good">Same day</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function JournalPromo() {
+  return (
+    <section className="ok-section journal">
+      <div className="ok-container">
+        <div className="journal-card">
+          <div className="journal-copy">
+            <span className="journal-mark" aria-hidden="true">
+              <BoltIcon size={22} />
+            </span>
+            <h2 className="ok-h2">Ideas for sharper, faster marketing.</h2>
+            <p>
+              Battle-tested frameworks on multi-channel content operations, autonomous AI pipelines, SEO scaling, and high-converting copywriting.
+            </p>
+            <Link to="/blog" className="btn btn-blue btn-square">
+              Read the journal
+              <Icon name="arrowRight" size={16} strokeWidth={2} />
+            </Link>
+          </div>
+          <div className="journal-visual" aria-hidden="true">
+            <div className="journal-book">
+              <span className="journal-book-mark">
+                <BoltIcon size={26} />
+              </span>
+              <span className="journal-book-rule" />
+              <strong>The Onefeed Journal</strong>
+              <small>Engineering &amp; growth playbooks for multi-channel teams.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Faq() {
+  const [openFaq, setOpenFaq] = useState(0);
+
+  return (
+    <section className="ok-section faq">
+      <span className="tile-accents left" aria-hidden="true" />
+      <div className="ok-container faq-layout">
+        <div className="faq-intro">
+          <span className="faq-mark" aria-hidden="true">
+            <Icon name="chat" size={28} strokeWidth={1.6} />
+          </span>
+          <p>Got questions?</p>
+          <h2 className="ok-h2">Frequently Asked Questions</h2>
+        </div>
+        <div className="faq-list">
+          {FAQS.map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div key={faq.q} className={`faq-item ${isOpen ? "open" : ""}`}>
+                <button
+                  type="button"
+                  className="faq-trigger"
+                  onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                  aria-expanded={isOpen}
+                >
+                  <span>{faq.q}</span>
+                  <Icon name="sparkle" size={16} className="faq-icon" />
+                </button>
+                {isOpen && <p className="faq-answer">{faq.a}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+

@@ -204,7 +204,7 @@ export default function BlogPost() {
 
             {/* Article Hero Header */}
             <div style={{ maxWidth: "860px", margin: "0 auto 36px" }}>
-              <span className="badge-pill" style={{ background: "var(--yellow)", marginBottom: "16px" }}>
+              <span className="badge-pill" style={{ background: "var(--sand)", marginBottom: "16px" }}>
                 {post.category || "AI & Tech"}
               </span>
               <h1 style={{ fontSize: "clamp(30px, 4.5vw, 48px)", lineHeight: "1.1", margin: "12px 0 18px" }}>
@@ -217,7 +217,7 @@ export default function BlogPost() {
               )}
 
               {/* Author Strip */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", padding: "16px 0", borderTop: "1.5px dashed var(--grey-dark)", borderBottom: "1.5px dashed var(--grey-dark)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", padding: "16px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <div className="author-avatar" style={{ width: "42px", height: "42px", fontSize: "15px" }}>
                     {getAuthor(post).charAt(0)}
@@ -247,7 +247,7 @@ export default function BlogPost() {
 
             {/* Featured Image */}
             {getImage(post) && (
-              <div style={{ maxWidth: "960px", margin: "0 auto 48px", borderRadius: "var(--radius-lg)", overflow: "hidden", border: "var(--line)", boxShadow: "var(--pop-lg)" }}>
+              <div style={{ maxWidth: "960px", margin: "0 auto 48px", borderRadius: "var(--radius-lg)", overflow: "hidden", border: "var(--line)", boxShadow: "var(--shadow-lg)" }}>
                 <img
                   src={getImage(post)}
                   alt={getTitle(post)}
@@ -266,7 +266,7 @@ export default function BlogPost() {
                 {getTags(post).length > 0 && (
                   <div className="blog-post-tags" style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "36px 0" }}>
                     {getTags(post).map((tag) => (
-                      <span key={tag} className="badge-pill" style={{ fontSize: "12px", background: "var(--grey)", border: "1px solid var(--ink)" }}>
+                      <span key={tag} className="badge-pill" style={{ fontSize: "12px", background: "var(--surface-muted)", border: "var(--line)" }}>
                         #{tag}
                       </span>
                     ))}
@@ -274,7 +274,7 @@ export default function BlogPost() {
                 )}
 
                 {/* Share Strip */}
-                <div style={{ padding: "24px", background: "var(--paper-soft)", border: "var(--line)", borderRadius: "var(--radius-md)", margin: "32px 0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+                <div style={{ padding: "24px", background: "var(--surface-soft)", border: "var(--line)", borderRadius: "var(--radius-md)", margin: "32px 0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
                   <div>
                     <strong>Enjoyed this article?</strong>
                     <p style={{ fontSize: "13.5px", color: "var(--text-muted)" }}>Share it with your growth and marketing team.</p>
@@ -364,7 +364,7 @@ export default function BlogPost() {
                   <Link className="btn btn-yellow btn-lg" to="/dashboard">
                     Open Studio Dashboard
                   </Link>
-                  <Link className="btn btn-outline btn-lg" to="/blog" style={{ color: "#000" }}>
+                  <Link className="btn btn-outline btn-lg" to="/blog">
                     ← Back to All Articles
                   </Link>
                 </div>

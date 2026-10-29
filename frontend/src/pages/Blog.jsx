@@ -205,7 +205,7 @@ export default function Blog() {
       <div className="shell">
         {/* Editorial Header */}
         <div className="blog-hero-wrap">
-          <div className="badge-pill" style={{ background: "var(--yellow)" }}>
+          <div className="badge-pill" style={{ background: "var(--sand)" }}>
             <span>📚 Engineering &amp; Growth Journal</span>
           </div>
           <h1>Ideas for sharper, faster marketing.</h1>
@@ -309,7 +309,7 @@ export default function Blog() {
 
         {/* Empty State */}
         {!loading && filteredPosts.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--paper-soft)", border: "var(--line)", borderRadius: "var(--radius-lg)" }}>
+          <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--surface-soft)", border: "var(--line)", borderRadius: "var(--radius-lg)" }}>
             <span style={{ fontSize: "36px", display: "block", marginBottom: "12px" }}>🔍</span>
             <h3>No articles found for "{searchQuery || selectedCategory}"</h3>
             <p style={{ color: "var(--text-muted)", marginTop: "8px", marginBottom: "20px" }}>
@@ -435,7 +435,7 @@ export default function Blog() {
                     required
                     placeholder="Enter your work email"
                     className="newsletter-input"
-                    style={{ background: "var(--paper)" }}
+                    style={{ background: "var(--surface)" }}
                   />
                   <button type="submit" className="btn btn-blue">
                     Subscribe
@@ -469,7 +469,7 @@ export default function Blog() {
                   </p>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", borderTop: "1px dashed var(--grey-dark)", paddingTop: "18px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", borderTop: "1px solid var(--border)", paddingTop: "18px" }}>
                   <div className="author-info">
                     <div className="author-avatar" style={{ width: "40px", height: "40px" }}>
                       {getAuthor(currentShowcasePost).charAt(0)}

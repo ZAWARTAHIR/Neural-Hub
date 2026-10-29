@@ -82,7 +82,7 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer showCta={false} />
     </>
   );
 }

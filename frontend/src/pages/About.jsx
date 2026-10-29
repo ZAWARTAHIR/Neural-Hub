@@ -68,7 +68,7 @@ export default function About() {
       </section>
 
       {/* Core Principles */}
-      <section className="sec" style={{ background: "var(--paper-soft)" }}>
+      <section className="sec" style={{ background: "var(--surface-soft)" }}>
         <div className="shell">
           <div className="sec-head">
             <div className="badge-pill green">
@@ -105,7 +105,7 @@ export default function About() {
           </div>
 
           {/* Tech Stack Badges */}
-          <div style={{ marginTop: "48px", paddingTop: "32px", borderTop: "1.5px dashed var(--grey-dark)" }}>
+          <div style={{ marginTop: "48px", paddingTop: "32px", borderTop: "1px solid var(--border)" }}>
             <h4 style={{ fontSize: "16px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: "16px" }}>
               Built With Modern Industry-Standard Architecture
             </h4>
@@ -132,7 +132,7 @@ export default function About() {
             <Link to="/dashboard" className="btn btn-yellow btn-lg">
               <span>Launch Studio Dashboard</span>
             </Link>
-            <Link to="/blog" className="btn btn-outline btn-lg" style={{ color: "#000" }}>
+            <Link to="/blog" className="btn btn-outline btn-lg">
               <span>Read Engineering Blog</span>
             </Link>
           </div>

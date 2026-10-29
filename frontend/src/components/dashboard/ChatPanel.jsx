@@ -1,12 +1,15 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { sendChatMessage } from "../../lib/api.js";
 import { supabase } from "../../lib/supabase.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
 
 export default function ChatPanel() {
   const { user } = useAuth();
+  const location = useLocation();
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  // Prefilled when arriving from a "Describe your campaign" form on the marketing site.
+  const [input, setInput] = useState(location.state?.prompt || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const textareaRef = useRef(null);
