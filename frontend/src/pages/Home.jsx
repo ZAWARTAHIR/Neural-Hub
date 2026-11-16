@@ -200,9 +200,11 @@ export default function Home() {
         <div className="journey-stage">
           <canvas className="journey-canvas" aria-hidden="true" />
           <div className="journey-glow" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+            <div className="journey-glow-orbs">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
 
           <div className="journey-world">

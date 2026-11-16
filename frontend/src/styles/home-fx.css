@@ -453,11 +453,25 @@
   background: radial-gradient(closest-side, var(--fx-glow-c), transparent);
 }
 
+/* The orbs stop short of the stage's bottom edge, under the solid end of the fade below. At display scales such as
+   125% that edge falls between device pixels, so every layer clipped by it is antialiased on the last row; an orb
+   clipped there as well would show through the equally antialiased fade as a faint line where the stage meets the FAQ. */
+.journey-glow-orbs {
+  position: absolute;
+  inset: 0 0 24px;
+  overflow: hidden;
+}
+
+/* The linear layer fades the bottom edge fully into the page background. Without it the glows and stars stop at a
+   hard line where the stage scrolls away into the FAQ (the ellipse alone only reaches --bg in the corners). It is
+   solid over the last 32px, which covers the orbs' clipped edge. */
 .journey-glow::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 55%, var(--bg) 100%);
+  background:
+    linear-gradient(to bottom, transparent calc(100% - 160px), var(--bg) calc(100% - 32px)),
+    radial-gradient(ellipse at center, transparent 55%, var(--bg) 100%);
 }
 
 /* The world moves towards the viewer; scenes are flat planes placed at increasing depth inside it. */

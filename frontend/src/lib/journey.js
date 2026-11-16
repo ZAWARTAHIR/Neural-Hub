@@ -20,7 +20,7 @@ const GAP = 2000; // world distance between two scenes
 const TRAVEL = 0.8; // scroll, in stage heights, to fly from one scene to the next
 const HOLD = 0.18; // scroll a scene rests for
 const FIRST_HOLD = 0.06;
-const RING_HOLD = 1.5; // the channel ring turns through its cards while it rests
+const RING_HOLD = 1.05; // the channel ring turns through its cards while it rests
 const RING_STEP = 40; // degrees between two ring cards
 // Seconds. The camera follows its scroll-mapped position through this lag, so its speed never changes in a single
 // frame — not where a flight starts or stops at a scene, and not on touch or keyboard scrolls without inertia.
@@ -42,10 +42,9 @@ const smooth = (a, b, v) => {
   const t = clamp((v - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
-// Flight between two scenes: settles gently at both ends without the stop-start pulse of a full smoothstep.
+// Flight between two scenes, and the ring turning from one card to the next: settles gently at both ends but never
+// stops outright, so every bit of scroll still moves something (a full smoothstep leaves dead zones that feel stuck).
 const glide = (t) => lerp(t, t * t * (3 - 2 * t), 0.65);
-// Lingers near 0 and 1, so each ring card faces the viewer for a while before the next one swings in.
-const dwell = (t) => t * t * t * (t * (t * 6 - 15) + 10);
 const wrap = (v, half) => ((((v + half) % (half * 2)) + half * 2) % (half * 2)) - half;
 const num = (v, digits = 2) => v.toFixed(digits);
 
@@ -171,7 +170,7 @@ function initJourney(section) {
   let top = 0;
   let ringR = 0;
   let scrollNow = 0;
-  const cam = { pos: 0, hold: 0 };
+  const cam = { pos: 0, turn: 0 };
   let lastZ = null;
   let vel = 0;
   let lastTime = 0;
@@ -272,16 +271,22 @@ function initJourney(section) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  // Scroll offset -> camera position, as a fractional scene index (2.5 = halfway between scenes 2 and 3).
+  // How far the channel ring has turned (0 = first card facing the viewer, 1 = last) while the camera rests on
+  // scene i, `hold` of the way through that rest.
+  const ringTurn = (i, hold) => (i < ringIndex ? 0 : i > ringIndex ? 1 : clamp((hold - 0.03) / 0.92));
+
+  // Scroll offset -> camera position, as a fractional scene index (2.5 = halfway between scenes 2 and 3), plus the
+  // ring's turn. The turn is worked out here from the scroll, not later from the lagging camera: the lagged position
+  // only reaches the ring exactly once scrolling stops, so gating on it froze the ring on the way down.
   function cameraAt(y) {
     for (let i = 0; i < count; i++) {
       const stop = stops[i];
       if (y > stop.end && i < count - 1) continue;
-      if (y >= stop.start) return { pos: i, hold: clamp((y - stop.start) / (stop.end - stop.start)) };
+      if (y >= stop.start) return { pos: i, turn: ringTurn(i, clamp((y - stop.start) / (stop.end - stop.start))) };
       const prev = stops[i - 1];
-      return { pos: i - 1 + glide(clamp((y - prev.end) / (stop.start - prev.end))), hold: 0 };
+      return { pos: i - 1 + glide(clamp((y - prev.end) / (stop.start - prev.end))), turn: ringTurn(i - 1, 1) };
     }
-    return { pos: 0, hold: 0 };
+    return { pos: 0, turn: 0 };
   }
 
   function render(now, dt, ambient) {
@@ -320,10 +325,10 @@ function initJourney(section) {
 
     if (ringIndex >= 0 && scenes[ringIndex].visible) {
       const sc = scenes[ringIndex];
-      const turn = cam.pos >= ringIndex ? clamp((cam.hold - 0.05) / 0.87) : 0;
+      const turn = cam.turn;
       const u = turn * (sc.cards.length - 1);
       const whole = clamp(Math.floor(u), 0, Math.max(0, sc.cards.length - 2));
-      const angle = (whole + dwell(u - whole)) * RING_STEP;
+      const angle = (whole + glide(u - whole)) * RING_STEP;
       const spin = (1 - glide(clamp(cam.pos - (ringIndex - 1)))) * 70; // swings into place while flying in
       put(sc.ring, "transform", `translateZ(${-ringR}px) rotateY(${num(spin - angle)}deg)`);
       sc.cards.forEach((card, i) => {
@@ -380,11 +385,11 @@ function initJourney(section) {
     const target = cameraAt(scrollNow);
     const follow = 1 - Math.exp(-dt / CAMERA_LAG);
     cam.pos += (target.pos - cam.pos) * follow;
-    cam.hold += (target.hold - cam.hold) * follow;
-    const settled = Math.abs(target.pos - cam.pos) < 0.0003 && Math.abs(target.hold - cam.hold) < 0.0003;
+    cam.turn += (target.turn - cam.turn) * follow;
+    const settled = Math.abs(target.pos - cam.pos) < 0.0003 && Math.abs(target.turn - cam.turn) < 0.0003;
     if (settled) {
       cam.pos = target.pos;
-      cam.hold = target.hold;
+      cam.turn = target.turn;
     }
     pointer.x += (pointer.tx - pointer.x) * (1 - Math.exp(-dt / 0.25));
     pointer.y += (pointer.ty - pointer.y) * (1 - Math.exp(-dt / 0.25));
