@@ -11,7 +11,7 @@ import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
-import ChatPanel from "./components/dashboard/ChatPanel.jsx";
+import DashboardHome from "./pages/dashboard/DashboardHome.jsx";
 import BlogPage from "./pages/dashboard/BlogPage.jsx";
 import ImagePage from "./pages/dashboard/ImagePage.jsx";
 import VideoPage from "./pages/dashboard/VideoPage.jsx";
@@ -34,7 +34,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />}>
         <Route element={<ProtectedRoute />}>
-          <Route index element={<ChatPanel />} />
+          <Route index element={<DashboardHome />} />
           <Route path="blog" element={<BlogPage />} />
           <Route path="image" element={<ImagePage />} />
           <Route path="video" element={<VideoPage />} />
