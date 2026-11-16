@@ -1,0 +1,888 @@
+/* ============================================================
+   LANDING PAGE — 3D SCROLL JOURNEY
+   lib/journey.js adds .is-3d to .journey and flies a camera through the scenes.
+   Without it (no JS, or reduced motion) every scene is an ordinary stacked section,
+   so the first half of this file is the static look and the second half the 3D stage.
+   ============================================================ */
+
+:root {
+  --fx-glow-a: rgba(255, 102, 102, 0.15);
+  --fx-glow-b: rgba(0, 179, 152, 0.13);
+  --fx-glow-c: rgba(217, 150, 59, 0.11);
+}
+
+:root[data-theme="dark"] {
+  --fx-glow-a: rgba(255, 102, 102, 0.2);
+  --fx-glow-b: rgba(0, 179, 152, 0.17);
+  --fx-glow-c: rgba(217, 150, 59, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fx-glow-a: rgba(255, 102, 102, 0.2);
+    --fx-glow-b: rgba(0, 179, 152, 0.17);
+    --fx-glow-c: rgba(217, 150, 59, 0.12);
+  }
+}
+
+/* ---------- Reveal on scroll (FAQ; see lib/useScrollFx.js) ---------- */
+.fx-ready [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  filter: blur(8px);
+  transition:
+    opacity 0.9s var(--ease-spring),
+    transform 0.9s var(--ease-spring),
+    filter 0.9s var(--ease-spring);
+}
+
+.fx-ready [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ============================================================
+   SCENE CONTENT (same in the static and the 3D layout)
+   ============================================================ */
+.ok-hero h1 {
+  background: linear-gradient(180deg, var(--ink) 40%, var(--text-muted) 130%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.scene-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.studio-frame {
+  border-radius: 18px;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    0 40px 120px -40px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Step cards ---------- */
+.step-wrap {
+  max-width: 1128px;
+}
+
+.step-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 56px;
+  min-height: 440px;
+  padding: 52px;
+  border: var(--line);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.step-copy .ok-kicker {
+  margin-bottom: 22px;
+}
+
+.step-num {
+  display: block;
+  margin-bottom: 18px;
+  font-family: var(--font-display);
+  font-size: 76px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, var(--ink), var(--text-subtle));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.step-copy h2 {
+  margin-bottom: 12px;
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.step-copy h2 + p {
+  max-width: 400px;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* Mock UI inside the step cards */
+.mock-window {
+  position: relative;
+  padding: 22px;
+  border: var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+  box-shadow: var(--shadow);
+}
+
+.mock-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.mock-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.mock-label {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mock-input {
+  padding: 14px 16px;
+  border: var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mock-typed {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: bottom;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mock-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.mock-chips span {
+  padding: 6px 12px;
+  border: var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.mock-agent {
+  display: grid;
+  grid-template-columns: auto 78px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.mock-agent + .mock-agent {
+  border-top: var(--line);
+}
+
+.mock-agent-name {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.mock-track {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.mock-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+}
+
+.mock-done {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal);
+  color: #ffffff;
+}
+
+.mock-doc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.mock-approved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.mock-doc-title {
+  margin-bottom: 14px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.mock-line {
+  display: block;
+  height: 9px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+}
+
+.mock-line.w90 { width: 90%; }
+.mock-line.w75 { width: 75%; }
+.mock-line.w60 { width: 60%; }
+
+.mock-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ---------- Channel cards ---------- */
+.ring-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px;
+  border: var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: var(--shadow-lg);
+  transition: border-color 0.2s ease;
+}
+
+.ring-card:hover {
+  border-color: var(--border-strong);
+}
+
+.ring-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ring-index {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ring-card h3 {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+}
+
+.ring-card > p {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.ring-sample {
+  margin-top: auto;
+  padding: 18px;
+  border: var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.ring-sample strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.ring-sample p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.ring-meter {
+  display: none;
+  width: 160px;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.ring-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+
+/* ============================================================
+   STATIC LAYOUT (no JS, or reduced motion): scenes stack
+   ============================================================ */
+.journey-canvas,
+.journey-glow,
+.journey-nav,
+.journey-hint,
+.debris {
+  display: none;
+}
+
+.scene {
+  padding-top: 120px;
+}
+
+.scene-hero {
+  padding-top: 88px;
+}
+
+.ring-view {
+  overflow-x: auto;
+}
+
+.ring {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  margin: 0 auto;
+  padding: 8px 24px 24px;
+}
+
+.ring-card {
+  width: min(380px, 80vw);
+  min-height: 430px;
+}
+
+/* ============================================================
+   3D STAGE
+   ============================================================ */
+.journey.is-3d .journey-stage {
+  position: sticky;
+  top: var(--nav-height);
+  height: calc(100vh - var(--nav-height));
+  /* Small-viewport units: the stage must not resize when a phone's address bar hides. */
+  height: calc(100svh - var(--nav-height));
+  overflow: hidden;
+  perspective: 1100px; /* keep in sync with PERSPECTIVE in lib/journey.js */
+}
+
+.journey.is-3d .journey-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Colour washes that wander behind the scenes, plus a vignette that dissolves stars at the edges. */
+.journey.is-3d .journey-glow {
+  display: block;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.journey-glow span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80vmax;
+  height: 80vmax;
+  margin: -40vmax 0 0 -40vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--fx-glow-a), transparent);
+  will-change: transform;
+}
+
+.journey-glow span:nth-child(2) {
+  background: radial-gradient(closest-side, var(--fx-glow-b), transparent);
+}
+
+.journey-glow span:nth-child(3) {
+  width: 60vmax;
+  height: 60vmax;
+  margin: -30vmax 0 0 -30vmax;
+  background: radial-gradient(closest-side, var(--fx-glow-c), transparent);
+}
+
+.journey-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, var(--bg) 100%);
+}
+
+/* The world moves towards the viewer; scenes are flat planes placed at increasing depth inside it. */
+.journey.is-3d .journey-world {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.journey.is-3d .scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  /* One cell exactly the size of the stage. minmax(0, …) matters both ways: the marquee's max-content rows must
+     not widen it, and a scene taller than the stage must overflow evenly above and below so it can be scaled to fit. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  padding: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Scenes and debris out of view: skip painting them and pause any looping animation inside. */
+.journey.is-3d .is-hidden {
+  visibility: hidden;
+}
+
+.journey.is-3d .is-hidden .marquee-track,
+.journey.is-3d .is-hidden .debris-body {
+  animation-play-state: paused;
+}
+
+.journey.is-3d .scene.is-active {
+  pointer-events: auto;
+}
+
+.journey.is-3d .scene-inner {
+  width: 100%;
+  min-width: 0;
+  transform: scale(var(--fit, 1));
+}
+
+.journey.is-3d .format-marquee {
+  margin-top: 56px;
+}
+
+.journey.is-3d .studio-body {
+  min-height: 480px;
+}
+
+/* Channel ring: cards stand on an arc and the arc turns as the page scrolls. */
+.journey.is-3d .ring-meter {
+  display: block;
+}
+
+.journey.is-3d .ring-view {
+  display: grid;
+  place-items: center;
+  height: 470px;
+  overflow: visible;
+  perspective: 1400px;
+}
+
+.journey.is-3d .ring {
+  display: block;
+  position: relative;
+  width: min(380px, 76vw);
+  height: 440px;
+  margin: 0;
+  padding: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.journey.is-3d .ring-card {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  min-height: 0;
+  backface-visibility: hidden;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.journey.is-3d .scene.is-active .ring-card.is-front {
+  pointer-events: auto;
+}
+
+/* Floating chips and icon tiles between the scenes */
+.journey.is-3d .debris {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.debris-body {
+  display: inline-flex;
+  transform: translate(-50%, -50%) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg));
+}
+
+/* No shadows here: dozens of blurred shadows on moving 3D layers cost a lot of GPU time; the border is enough. */
+.debris-body .format-chip {
+  padding: 9px 16px 9px 14px;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.debris-body .icon-tile {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+}
+
+/* Dot navigation */
+.journey.is-3d .journey-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  z-index: 5;
+  transform: translateY(-50%);
+}
+
+.journey-dot {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.journey-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: transform 0.25s var(--ease-spring), background-color 0.2s ease;
+}
+
+.journey-dot:hover::after {
+  background: var(--text-muted);
+}
+
+.journey-dot.is-active::after {
+  background: var(--ink);
+  transform: scale(1.5);
+}
+
+.journey-dot::before {
+  content: attr(data-label);
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px 9px;
+  border: var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.journey-dot:hover::before,
+.journey-dot:focus-visible::before {
+  opacity: 1;
+}
+
+/* Scroll hint */
+.journey.is-3d .journey-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 5;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.journey-hint::after {
+  content: "";
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(var(--text-muted), transparent);
+  transform-origin: 50% 0;
+  animation: fx-hint 1.8s ease-in-out infinite;
+}
+
+/* Step visuals wait for their scene, then play once (.is-in is added when the scene first arrives). */
+.journey.is-3d .mock-typed {
+  clip-path: inset(0 100% 0 0);
+}
+
+.journey.is-3d .is-in .mock-typed {
+  animation: fx-type 1.6s steps(44, end) 0.3s forwards;
+}
+
+.journey.is-3d .mock-chips span {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.journey.is-3d .is-in .mock-chips span {
+  animation: fx-pop-in 0.5s var(--ease-spring) forwards;
+}
+
+.journey.is-3d .is-in .mock-chips span:nth-child(1) { animation-delay: 1.9s; }
+.journey.is-3d .is-in .mock-chips span:nth-child(2) { animation-delay: 2.05s; }
+.journey.is-3d .is-in .mock-chips span:nth-child(3) { animation-delay: 2.2s; }
+
+.journey.is-3d .mock-fill {
+  width: 0;
+}
+
+.journey.is-3d .is-in .mock-fill {
+  animation: fx-fill 1.3s var(--ease-spring) forwards;
+  animation-delay: calc(var(--i) * 0.22s + 0.2s);
+}
+
+.journey.is-3d .mock-done {
+  transform: scale(0);
+}
+
+.journey.is-3d .is-in .mock-done {
+  animation: fx-pop 0.45s var(--ease-spring) forwards;
+  animation-delay: calc(var(--i) * 0.22s + 1.3s);
+}
+
+.journey.is-3d .mock-approved {
+  opacity: 0;
+  transform: translateY(6px) scale(0.9);
+}
+
+.journey.is-3d .is-in .mock-approved {
+  animation: fx-pop-in 0.5s var(--ease-spring) 0.9s forwards;
+}
+
+/* ============================================================
+   MOTION — only when the visitor has not asked for reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: fx-rise 1s var(--ease-spring) both;
+    animation-delay: calc(var(--d, 0) * 90ms + 80ms);
+  }
+
+  .format-marquee {
+    animation: fx-fade 1.2s ease 0.55s both;
+  }
+
+  .debris-body {
+    animation: fx-float 6s ease-in-out infinite alternate;
+    animation-delay: var(--fd, 0s);
+  }
+
+  /* Footer CTA rises and scales into place */
+  .footer-cta[data-scroll] {
+    transform-origin: 50% 100%;
+    transform:
+      translate3d(0, calc((1 - var(--p, 1)) * 60px), 0)
+      scale(calc(0.92 + var(--p, 1) * 0.08));
+  }
+}
+
+@keyframes fx-rise {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); filter: blur(10px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes fx-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fx-float {
+  from { translate: 0 -9px; }
+  to { translate: 0 9px; }
+}
+
+@keyframes fx-hint {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes fx-type {
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes fx-fill {
+  to { width: 100%; }
+}
+
+@keyframes fx-pop {
+  to { transform: scale(1); }
+}
+
+@keyframes fx-pop-in {
+  to { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px) {
+  .step-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    min-height: 0;
+    padding: 30px 24px;
+  }
+
+  .step-num {
+    font-size: 54px;
+    margin-bottom: 12px;
+  }
+
+  .step-copy .ok-kicker {
+    margin-bottom: 16px;
+  }
+
+  .step-copy h2 {
+    font-size: 26px;
+  }
+}
+
+/* Phones: the studio preview stacks into one column, so trim it to fit the stage without shrinking the text. */
+@media (max-width: 720px) {
+  .journey.is-3d .studio-body {
+    min-height: 0;
+  }
+
+  .journey.is-3d .studio-preview-actions {
+    display: none;
+  }
+
+  .journey.is-3d .studio-preview-body p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  .scene {
+    padding-top: 88px;
+  }
+
+  .scene-hero {
+    padding-top: 48px;
+  }
+
+  .scene-head {
+    margin-bottom: 20px;
+  }
+
+  .step-card {
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
+
+  .mock-window {
+    padding: 16px;
+  }
+
+  .ring-card {
+    padding: 22px;
+  }
+
+  .journey.is-3d .format-marquee {
+    margin-top: 36px;
+  }
+
+  .journey.is-3d .journey-nav {
+    right: 2px;
+  }
+
+  .journey-dot {
+    width: 18px;
+    height: 18px;
+  }
+
+  .journey-dot::before {
+    display: none;
+  }
+
+  /* Fewer floating pieces on small screens */
+  .journey.is-3d .debris:nth-child(3n) {
+    display: none;
+  }
+
+  .debris-body .format-chip {
+    font-size: 13px;
+    padding: 7px 13px 7px 11px;
+  }
+
+  .debris-body .icon-tile {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+  }
+}

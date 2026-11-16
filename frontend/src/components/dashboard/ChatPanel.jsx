@@ -3,8 +3,9 @@ import { useLocation } from "react-router-dom";
 import { sendChatMessage } from "../../lib/api.js";
 import { supabase } from "../../lib/supabase.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
+import { BoltIcon, Icon } from "../icons/Icons.jsx";
 
-export default function ChatPanel() {
+export default function ChatPanel({ inputRef, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const [messages, setMessages] = useState([]);
@@ -12,7 +13,10 @@ export default function ChatPanel() {
   const [input, setInput] = useState(location.state?.prompt || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const textareaRef = useRef(null);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+  const localRef = useRef(null);
+  const textareaRef = inputRef || localRef;
+  const listRef = useRef(null);
 
   useEffect(() => {
     async function loadMessages() {
@@ -26,6 +30,20 @@ export default function ChatPanel() {
     }
     loadMessages();
   }, [user]);
+
+  // Keep the newest message in view.
+  useEffect(() => {
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages, loading]);
+
+  // Grow the textarea with its content, up to the CSS max-height.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input, textareaRef]);
 
   async function persistMessage(role, content) {
     if (!supabase || !user) return;
@@ -72,45 +90,97 @@ export default function ChatPanel() {
     }
   }
 
-  return (
-    <div className="chat-panel">
-      <div className="chat-panel-head">
-        <span className="mark" />
-        New campaign
-      </div>
+  async function copyMessage(index, content) {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex((current) => (current === index ? null : current)), 1500);
+    } catch {
+      // Clipboard can be blocked (insecure origin or denied permission); nothing to undo.
+    }
+  }
 
-      <div className="chat-messages">
-        {messages.length === 0 && (
-          <div className="chat-empty">
-            Describe a campaign or update. For example: &ldquo;Write a week
-            of content for our new product launch, friendly tone.&rdquo;
+  return (
+    <section className="app-chat" aria-label="Campaign chat">
+      <header className="app-chat-head">
+        <div className="app-chat-title">
+          New campaign
+          <span className="app-live-dot" aria-hidden="true" />
+        </div>
+        <button type="button" className="app-icon-btn" onClick={onClose} aria-label="Hide chat" title="Hide chat">
+          <Icon name="panelRight" size={18} />
+        </button>
+      </header>
+
+      <div className="app-chat-messages" ref={listRef}>
+        {messages.length === 0 && !loading && (
+          <div className="app-chat-empty">
+            <span className="app-chat-empty-mark"><BoltIcon size={20} /></span>
+            <p>
+              Describe a campaign or update. For example: &ldquo;Write a week
+              of content for our new product launch, friendly tone.&rdquo;
+            </p>
           </div>
         )}
 
-        {messages.map((message, index) => (
-          <div key={index} className={`chat-bubble ${message.role}`}>
-            {message.content}
-          </div>
-        ))}
+        {messages.map((message, index) =>
+          message.role === "user" ? (
+            <div key={index} className="app-msg app-msg-user">{message.content}</div>
+          ) : (
+            <div key={index} className="app-msg app-msg-assistant">
+              <div className="app-msg-text">{message.content}</div>
+              <div className="app-msg-actions">
+                <button
+                  type="button"
+                  className="app-icon-btn app-icon-btn-sm"
+                  onClick={() => copyMessage(index, message.content)}
+                  aria-label="Copy reply"
+                  title={copiedIndex === index ? "Copied" : "Copy"}
+                >
+                  <Icon name={copiedIndex === index ? "check" : "copy"} size={16} />
+                </button>
+              </div>
+            </div>
+          )
+        )}
 
-        {loading && <div className="chat-bubble loading">Generating a response…</div>}
+        {loading && (
+          <div className="app-msg app-msg-assistant app-typing" aria-label="Generating a response">
+            <span /><span /><span />
+          </div>
+        )}
       </div>
 
-      {error && <div className="chat-error">{error}</div>}
+      {error && <div className="app-chat-error">{error}</div>}
 
-      <div className="chat-input-row">
+      <form
+        className="app-composer"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSend();
+        }}
+      >
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Describe your campaign…"
-          rows={1}
+          rows={2}
         />
-        <button type="button" className="btn btn-blue" onClick={handleSend} disabled={loading}>
-          Send
-        </button>
-      </div>
-    </div>
+        <div className="app-composer-bar">
+          <span className="app-composer-hint">Enter to send · Shift + Enter for a new line</span>
+          <button
+            type="submit"
+            className="app-send-btn"
+            disabled={loading || !input.trim()}
+            aria-label="Send"
+            title="Send"
+          >
+            <Icon name="arrowUp" size={18} strokeWidth={2.2} />
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
