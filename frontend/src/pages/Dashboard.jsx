@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar.jsx";
 import ChatPanel from "../components/dashboard/ChatPanel.jsx";
-import { channelForPath } from "../components/dashboard/channels.js";
+import { displayName } from "../components/dashboard/channels.js";
 import { Icon } from "../components/icons/Icons.jsx";
 import Navbar from "../components/layout/Navbar.jsx";
 import Footer from "../components/layout/Footer.jsx";
@@ -22,14 +22,33 @@ export default function Dashboard() {
   return isAdmin ? <AppShell /> : <PublicDashboard />;
 }
 
+// 5:00-11:59 morning, 12:00-16:59 afternoon, otherwise (incl. after midnight) evening.
+function greeting(date = new Date()) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+// Re-renders once a minute so the greeting changes while the page stays open.
+function useGreeting() {
+  const [text, setText] = useState(() => greeting());
+  useEffect(() => {
+    const id = setInterval(() => setText(greeting()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  return text;
+}
+
 function AppShell() {
+  const { user } = useAuth();
+  const greetingText = useGreeting();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => matches(SIDEBAR_INLINE));
-  // The AI Helper starts minimized as a round launcher, unless the visitor
+  // The AI Helper starts closed (opened from the header button), unless the visitor
   // arrived with a prefilled prompt from the marketing site.
   const [chatOpen, setChatOpen] = useState(() => Boolean(location.state?.prompt));
   const chatInputRef = useRef(null);
-  const current = channelForPath(location.pathname);
 
   const openChat = useCallback(({ focus = true } = {}) => {
     setChatOpen(true);
@@ -64,28 +83,34 @@ function AppShell() {
       />
 
       <div className="app-center">
-        <div className="app-topbar">
-          {!sidebarOpen && (
-            <button type="button" className="app-icon-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" title="Open sidebar">
-              <Icon name="menu" size={20} />
-            </button>
-          )}
-
-          <div className="app-crumbs">
-            <Link to="/dashboard" className="app-crumb">
-              <Icon name="grid" size={16} />
-              Workspace
-            </Link>
-            {current.key !== "chat" && (
-              <span className="app-crumb active">
-                <Icon name={current.icon} size={16} />
-                {current.label}
-              </span>
-            )}
-          </div>
-        </div>
-
+        {/* The header lives inside the scroll area so it scrolls away with the page. */}
         <main className="app-content">
+          <header className="app-topbar">
+            {!sidebarOpen && (
+              <button type="button" className="app-icon-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" title="Open sidebar">
+                <Icon name="menu" size={20} />
+              </button>
+            )}
+
+            <h1 className="app-greeting">
+              {greetingText}, <span>{displayName(user)}</span>
+            </h1>
+
+            <button
+              type="button"
+              className={`app-helper-btn${chatOpen ? " is-open" : ""}`}
+              onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
+              aria-label={chatOpen ? "Close AI Helper" : "Open AI Helper"}
+              aria-expanded={chatOpen}
+            >
+              <span className="app-helper-btn-icon">
+                <Icon name="bot" size={16} strokeWidth={1.9} />
+                <span className="app-helper-btn-status" aria-hidden="true" />
+              </span>
+              AI Helper
+            </button>
+          </header>
+
           <Outlet context={{ openChat }} />
         </main>
       </div>
@@ -94,25 +119,6 @@ function AppShell() {
       <aside className="app-chat-wrap" aria-hidden={!chatOpen}>
         <ChatPanel inputRef={chatInputRef} onClose={() => setChatOpen(false)} />
       </aside>
-
-      <button
-        type="button"
-        className="ai-helper-launcher"
-        onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
-        aria-label={chatOpen ? "Minimize AI Helper" : "Open AI Helper"}
-        aria-expanded={chatOpen}
-        title="AI Helper"
-      >
-        <span className="ai-helper-launcher-label" aria-hidden="true">
-          <strong>AI Helper</strong>
-          <small>Ask me anything</small>
-        </span>
-        <span className="ai-helper-launcher-orb">
-          <span className="ai-helper-launcher-icon ai-helper-icon-bot"><Icon name="bot" size={28} strokeWidth={1.8} /></span>
-          <span className="ai-helper-launcher-icon ai-helper-icon-close"><Icon name="close" size={24} strokeWidth={2.2} /></span>
-          <span className="ai-helper-launcher-status" aria-hidden="true" />
-        </span>
-      </button>
 
       <div className="app-backdrop" onClick={closeOverlays} aria-hidden="true" />
     </div>

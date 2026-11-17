@@ -3,6 +3,7 @@ export const CHANNELS = [
   { key: "chat", to: "/dashboard", end: true, label: "Chat", icon: "chat", accent: "var(--teal)", desc: "Campaign briefs" },
   { key: "blog", to: "/dashboard/blog", label: "Blog", icon: "blog", accent: "var(--amber)", desc: "Long-form posts" },
   { key: "image", to: "/dashboard/image", label: "Image", icon: "image", accent: "var(--coral)", desc: "Campaign visuals" },
+  { key: "gif", to: "/dashboard/gif", label: "GIF", icon: "gif", accent: "#e0559b", desc: "Animated loops" },
   { key: "video", to: "/dashboard/video", label: "Video", icon: "video", accent: "#8b7cf6", desc: "Short-form video" },
   { key: "whatsapp", to: "/dashboard/whatsapp", label: "WhatsApp", icon: "whatsapp", accent: "#25d366", desc: "Broadcast messages" }
 ];

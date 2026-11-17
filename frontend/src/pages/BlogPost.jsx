@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase.js";
 import { fallbackPosts } from "./Blog.jsx";
+import { cleanDisplayText, getTags, renderContent, slugify } from "../lib/blogFormat.jsx";
 
 function getTitle(post) {
   return post.title || post.heading || post.name || post.blog_title || "Untitled post";
@@ -40,41 +41,6 @@ function getReadTime(post) {
   return `${Math.max(3, Math.round(words / 150) || 5)} min read`;
 }
 
-function getTags(post) {
-  if (Array.isArray(post.tags)) return post.tags;
-  if (typeof post.tags === "string") return post.tags.split(",").map((tag) => tag.trim()).filter(Boolean);
-  return post.category ? [post.category, "Marketing", "AI"] : ["AI", "Growth", "Marketing"];
-}
-
-function cleanDisplayText(value) {
-  return String(value || "")
-    .replace(/^\s*["']|["']\s*$/g, "")
-    .replace(/^\s*#{1,6}\s*/, "")
-    .replace(/\*\*/g, "")
-    .trim();
-}
-
-function renderInline(value) {
-  const parts = String(value || "").split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-  return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("*") && part.endsWith("*")) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
-    }
-    return <span key={index}>{part}</span>;
-  });
-}
-
-function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
-
 function getHeadings(content) {
   return String(content || "")
     .split("\n")
@@ -88,33 +54,6 @@ function getHeadings(content) {
         id: slugify(match[2])
       };
     });
-}
-
-function renderContent(content) {
-  const blocks = String(content || "").split(/\n\s*\n/).filter(Boolean);
-
-  return blocks.map((block, index) => {
-    const lines = block.trim().split("\n");
-    const firstLine = lines[0].trim();
-    const remainingLines = lines.slice(1).join(" ").trim();
-
-    if (firstLine.startsWith("### ")) {
-      const headingText = firstLine.slice(4);
-      return <h3 id={slugify(headingText)} key={index} style={{ margin: "32px 0 12px", fontSize: "22px" }}>{renderInline(headingText)}</h3>;
-    }
-    if (firstLine.startsWith("# ") || firstLine.startsWith("## ")) {
-      const headingText = firstLine.startsWith("## ") ? firstLine.slice(3) : firstLine.slice(2);
-      return <h2 id={slugify(headingText)} key={index} style={{ margin: "36px 0 14px", fontSize: "26px" }}>{renderInline(headingText)}</h2>;
-    }
-    if (lines.every((line) => /^[-*]\s+/.test(line.trim()))) {
-      return (
-        <ul key={index} style={{ margin: "16px 0 24px", paddingLeft: "24px" }}>
-          {lines.map((line) => <li key={line} style={{ marginBottom: "8px" }}>{renderInline(line.trim().replace(/^[-*]\s+/, ""))}</li>)}
-        </ul>
-      );
-    }
-    return <p key={index} style={{ marginBottom: "20px", fontSize: "16.5px", lineHeight: "1.75", color: "var(--ink-soft)" }}>{renderInline(remainingLines ? `${firstLine} ${remainingLines}` : firstLine)}</p>;
-  });
 }
 
 export default function BlogPost() {

@@ -3339,3 +3339,54 @@ a {
   hyphens: auto;
   -webkit-hyphens: auto;
 }
+
+/* ============================================================
+   LEGAL PAGES (Privacy policy, Terms & conditions)
+   ============================================================ */
+.legal-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 72px 0 80px;
+}
+
+.legal-page h1 {
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.legal-page .updated {
+  margin-top: 12px;
+  padding-bottom: 28px;
+  border-bottom: var(--line);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.legal-page h2 {
+  margin-top: 40px;
+  font-size: clamp(20px, 2.6vw, 24px);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.legal-page p {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+
+.legal-page .updated + p {
+  margin-top: 28px;
+}
+
+@media (max-width: 640px) {
+  .legal-page {
+    padding: 40px 0 56px;
+  }
+
+  .legal-page p {
+    font-size: 15px;
+  }
+}

@@ -15,7 +15,10 @@ import DashboardHome from "./pages/dashboard/DashboardHome.jsx";
 import BlogPage from "./pages/dashboard/BlogPage.jsx";
 import ImagePage from "./pages/dashboard/ImagePage.jsx";
 import VideoPage from "./pages/dashboard/VideoPage.jsx";
+import GifPage from "./pages/dashboard/GifPage.jsx";
 import WhatsappPage from "./pages/dashboard/WhatsappPage.jsx";
+import ProfilePage from "./pages/dashboard/ProfilePage.jsx";
+import CampaignPage from "./pages/dashboard/CampaignPage.jsx";
 
 export default function App() {
   return (
@@ -37,8 +40,11 @@ export default function App() {
           <Route index element={<DashboardHome />} />
           <Route path="blog" element={<BlogPage />} />
           <Route path="image" element={<ImagePage />} />
+          <Route path="gif" element={<GifPage />} />
           <Route path="video" element={<VideoPage />} />
           <Route path="whatsapp" element={<WhatsappPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="campaign" element={<CampaignPage />} />
         </Route>
       </Route>
     </Routes>

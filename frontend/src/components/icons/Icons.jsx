@@ -10,6 +10,14 @@ const PATHS = {
       <line x1="9" y1="17" x2="13" y2="17" />
     </>
   ),
+  gif: (
+    <>
+      <rect x="2.5" y="5" width="19" height="14" rx="3" />
+      <path d="M10 10.2a2 2 0 0 0-1.6-.7c-1.3 0-2.1 1-2.1 2.5s.8 2.5 2.1 2.5c.9 0 1.6-.5 1.6-1.4V12H8.6" />
+      <path d="M12.6 9.5v5" />
+      <path d="M15.3 14.5v-5h2.6M15.3 12h2.1" />
+    </>
+  ),
   image: (
     <>
       <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -76,6 +84,27 @@ const PATHS = {
       <circle cx="9" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <path d="M9.5 15.5c1.4 1 3.6 1 5 0" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <line x1="20.5" y1="20.5" x2="16" y2="16" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" />
+      <path d="M4 3v5h5" />
+      <path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" />
+      <path d="M20 21v-5h-5" />
+    </>
+  ),
+  bolt: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+  shieldCheck: (
+    <>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
     </>
   ),
   chat: (

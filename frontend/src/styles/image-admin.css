@@ -1,0 +1,354 @@
+/* ============================================================
+   DASHBOARD › IMAGES (pages/dashboard/ImagePage.jsx)
+   Shares header / stats / toolbar styles with blog-admin.css.
+   ============================================================ */
+
+/* ---- Grid ---- */
+.ia-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+}
+
+.ia-tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-muted);
+  cursor: zoom-in;
+  font: inherit;
+  text-align: left;
+}
+
+.ia-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ia-tile:hover img {
+  transform: scale(1.04);
+}
+
+.ia-tile:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring), 0 0 0 1px var(--border-strong);
+}
+
+.ia-tile-info {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 28px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78), transparent);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ia-tile:hover .ia-tile-info,
+.ia-tile:focus-visible .ia-tile-info {
+  opacity: 1;
+  transform: none;
+}
+
+.ia-tile-info strong {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ia-tile-info small {
+  font-size: 11.5px;
+  opacity: 0.8;
+}
+
+.ia-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+.ia-skeleton {
+  cursor: default;
+  background: linear-gradient(90deg, transparent, var(--hover), transparent) var(--app-panel);
+  background-size: 200% 100%;
+  animation: ba-sweep 1.3s ease-in-out infinite;
+}
+
+/* ---- Lightbox ---- */
+.ia-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  visibility: hidden;
+  transition: visibility 0s linear 0.25s;
+}
+
+.ia-lightbox.is-open {
+  visibility: visible;
+  transition: visibility 0s linear 0s;
+}
+
+.ia-lightbox-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.ia-lightbox.is-open .ia-lightbox-scrim {
+  opacity: 1;
+}
+
+.ia-lightbox-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  width: min(1100px, 100%);
+  max-height: calc(100dvh - 48px);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--app-panel);
+  box-shadow: var(--shadow-lg);
+  animation: ia-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ia-pop {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.ia-stage {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: #0b0a0a;
+}
+
+.ia-stage img {
+  max-width: 100%;
+  max-height: calc(100dvh - 50px);
+  object-fit: contain;
+  display: block;
+}
+
+.ia-nav {
+  position: absolute;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.15s ease;
+}
+
+.ia-nav:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.ia-nav-prev {
+  left: 12px;
+}
+
+.ia-nav-next {
+  right: 12px;
+}
+
+.ia-details {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 14px 18px 20px;
+  border-left: 1px solid var(--app-border);
+  overflow-y: auto;
+}
+
+.ia-details header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ia-position {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.ia-details h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+.ia-details dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.ia-details dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+.ia-details dt {
+  color: var(--text-muted);
+}
+
+.ia-details dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.ia-used {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-border);
+}
+
+.ia-used > span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.ia-used p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.ia-used a {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--app-center);
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.ia-used a:hover {
+  background: var(--surface-muted);
+}
+
+.ia-used a svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.ia-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.ia-actions .ba-btn {
+  justify-content: center;
+}
+
+@media (max-width: 860px) {
+  .ia-lightbox {
+    padding: 0;
+  }
+
+  .ia-lightbox-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ia-stage img {
+    max-height: 60dvh;
+  }
+
+  .ia-details {
+    border-left: 0;
+    border-top: 1px solid var(--app-border);
+    max-height: 40dvh;
+  }
+
+  .ia-actions {
+    flex-direction: row;
+  }
+
+  .ia-actions .ba-btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .ia-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ia-tile-info {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-tile img,
+  .ia-lightbox-card,
+  .ia-skeleton {
+    animation: none;
+    transition: none;
+  }
+}
