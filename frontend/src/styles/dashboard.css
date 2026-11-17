@@ -1,7 +1,7 @@
 /* ============================================================
-   DASHBOARD APP SHELL — three panels: sidebar · content · chat
+   DASHBOARD APP SHELL — sidebar · content, plus a floating AI Helper
    Breakpoints (keep in sync with pages/Dashboard.jsx):
-   ≤1200px chat becomes a drawer, ≤860px sidebar becomes a drawer.
+   ≤860px sidebar becomes a drawer, ≤580px the AI Helper goes full screen.
    ============================================================ */
 
 :root {
@@ -417,27 +417,6 @@
   color: var(--ink);
 }
 
-.app-chat-toggle {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 10px;
-  border: 1px solid var(--app-border);
-  background: var(--app-panel);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.app-chat-toggle:hover {
-  border-color: var(--border-strong);
-}
-
 /* ---- Overview (center) ---- */
 .app-home {
   max-width: 960px;
@@ -638,17 +617,190 @@
   font-size: 16px;
 }
 
-/* ---- Chat panel (right) ---- */
+/* ---- AI Helper (floating chat) ---- */
 .app-chat-wrap {
-  width: 400px;
-  flex-shrink: 0;
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  z-index: 70;
+  width: min(400px, calc(100vw - 32px));
+  height: min(620px, calc(100dvh - 140px));
   display: flex;
+  overflow: hidden;
   background: var(--app-panel);
-  border-left: 1px solid var(--app-border);
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg), 0 24px 60px rgba(0, 0, 0, 0.18);
+  transform-origin: bottom right;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
 .app-shell.chat-closed .app-chat-wrap {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px) scale(0.96);
+}
+
+.ai-helper-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 71;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Name tag beside the orb */
+.ai-helper-launcher-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: var(--app-panel);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  color: var(--ink);
+  text-align: right;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s var(--ease-spring);
+}
+
+.ai-helper-launcher-label strong {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.ai-helper-launcher-label small {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* The round agent orb */
+.ai-helper-launcher-orb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.35), transparent 45%),
+    linear-gradient(135deg, #00c7a8 0%, #00967f 55%, #006b5b 100%);
+  box-shadow:
+    0 10px 26px rgba(0, 150, 127, 0.45),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+
+/* Soft pulsing ring so the helper feels "alive" */
+.ai-helper-launcher-orb::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 179, 152, 0.45);
+  animation: ai-helper-pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ai-helper-pulse {
+  0% { transform: scale(0.92); opacity: 0.9; }
+  70%, 100% { transform: scale(1.25); opacity: 0; }
+}
+
+.ai-helper-launcher-icon {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-spring);
+}
+
+.ai-helper-icon-close {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+.ai-helper-launcher-status {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2.5px solid var(--app-panel);
+}
+
+.ai-helper-launcher:hover .ai-helper-launcher-orb {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow:
+    0 14px 32px rgba(0, 150, 127, 0.55),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.ai-helper-launcher:hover .ai-helper-launcher-label {
+  transform: translateX(-3px);
+}
+
+.ai-helper-launcher:focus-visible {
+  outline: none;
+}
+
+.ai-helper-launcher:focus-visible .ai-helper-launcher-orb {
+  box-shadow: 0 0 0 4px var(--teal-border), 0 10px 26px rgba(0, 150, 127, 0.45);
+}
+
+/* Open state: orb turns into a close button, name tag tucks away */
+.app-shell.chat-open .ai-helper-launcher-label {
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+}
+
+.app-shell.chat-open .ai-helper-launcher-orb::before,
+.app-shell.chat-open .ai-helper-launcher-status {
   display: none;
+}
+
+.app-shell.chat-open .ai-helper-icon-bot {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+.app-shell.chat-open .ai-helper-icon-close {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-helper-launcher-orb::before {
+    animation: none;
+  }
+}
+
+.app-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c7a8 0%, #006b5b 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .app-chat {
@@ -834,27 +986,6 @@
   cursor: not-allowed;
 }
 
-/* ---- Responsive: chat becomes a drawer ---- */
-@media (max-width: 1200px) {
-  .app-chat-wrap {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 60;
-    width: min(420px, 100%);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .app-shell.chat-open .app-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgba(0, 0, 0, 0.45);
-  }
-}
-
 /* ---- Responsive: sidebar becomes a drawer ---- */
 @media (max-width: 860px) {
   .app-sidebar {
@@ -898,9 +1029,26 @@
 }
 
 @media (max-width: 580px) {
+  /* AI Helper fills the screen; its header's minimize button closes it. */
   .app-chat-wrap {
+    inset: 0;
     width: 100%;
-    border-left: 0;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .app-shell.chat-open .ai-helper-launcher {
+    display: none;
+  }
+
+  .ai-helper-launcher {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .ai-helper-launcher-label small {
+    display: none;
   }
 
   .app-task {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/dashboard/Sidebar.jsx";
 import ChatPanel from "../components/dashboard/ChatPanel.jsx";
@@ -10,7 +10,6 @@ import { useAuth } from "../lib/AuthContext.jsx";
 
 // Breakpoints must match styles/dashboard.css.
 const SIDEBAR_INLINE = "(min-width: 861px)"; // below this the sidebar is a drawer
-const CHAT_INLINE = "(min-width: 1201px)"; // below this the chat is a drawer
 const matches = (query) => window.matchMedia(query).matches;
 
 export default function Dashboard() {
@@ -26,7 +25,9 @@ export default function Dashboard() {
 function AppShell() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => matches(SIDEBAR_INLINE));
-  const [chatOpen, setChatOpen] = useState(() => matches(CHAT_INLINE));
+  // The AI Helper starts minimized as a round launcher, unless the visitor
+  // arrived with a prefilled prompt from the marketing site.
+  const [chatOpen, setChatOpen] = useState(() => Boolean(location.state?.prompt));
   const chatInputRef = useRef(null);
   const current = channelForPath(location.pathname);
 
@@ -35,10 +36,19 @@ function AppShell() {
     if (focus) requestAnimationFrame(() => chatInputRef.current?.focus());
   }, []);
 
-  // Close whichever panels are currently drawn as overlays.
+  // Escape minimizes the AI Helper.
+  useEffect(() => {
+    if (!chatOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") setChatOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chatOpen]);
+
+  // Close the sidebar when it is drawn as an overlay.
   function closeOverlays() {
     if (!matches(SIDEBAR_INLINE)) setSidebarOpen(false);
-    if (!matches(CHAT_INLINE)) setChatOpen(false);
   }
 
   function handleNavigate() {
@@ -73,13 +83,6 @@ function AppShell() {
               </span>
             )}
           </div>
-
-          {!chatOpen && (
-            <button type="button" className="app-chat-toggle" onClick={() => openChat({ focus: false })}>
-              <Icon name="chat" size={17} />
-              Chat
-            </button>
-          )}
         </div>
 
         <main className="app-content">
@@ -87,9 +90,29 @@ function AppShell() {
         </main>
       </div>
 
-      <aside className="app-chat-wrap">
+      {/* AI Helper: stays mounted while minimized so the conversation is kept. */}
+      <aside className="app-chat-wrap" aria-hidden={!chatOpen}>
         <ChatPanel inputRef={chatInputRef} onClose={() => setChatOpen(false)} />
       </aside>
+
+      <button
+        type="button"
+        className="ai-helper-launcher"
+        onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
+        aria-label={chatOpen ? "Minimize AI Helper" : "Open AI Helper"}
+        aria-expanded={chatOpen}
+        title="AI Helper"
+      >
+        <span className="ai-helper-launcher-label" aria-hidden="true">
+          <strong>AI Helper</strong>
+          <small>Ask me anything</small>
+        </span>
+        <span className="ai-helper-launcher-orb">
+          <span className="ai-helper-launcher-icon ai-helper-icon-bot"><Icon name="bot" size={28} strokeWidth={1.8} /></span>
+          <span className="ai-helper-launcher-icon ai-helper-icon-close"><Icon name="close" size={24} strokeWidth={2.2} /></span>
+          <span className="ai-helper-launcher-status" aria-hidden="true" />
+        </span>
+      </button>
 
       <div className="app-backdrop" onClick={closeOverlays} aria-hidden="true" />
     </div>

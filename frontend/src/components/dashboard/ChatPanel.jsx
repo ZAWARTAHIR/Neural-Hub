@@ -1,9 +1,26 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { sendChatMessage } from "../../lib/api.js";
+import { sendAiHelperMessage } from "../../lib/api.js";
 import { supabase } from "../../lib/supabase.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
 import { BoltIcon, Icon } from "../icons/Icons.jsx";
+
+// One n8n chat session per signed-in user (falls back to a per-browser id),
+// so the agent's memory follows the conversation.
+function getSessionId(user) {
+  if (user?.id) return `onefeed-${user.id}`;
+  const key = "onefeed-ai-helper-session";
+  try {
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = `onefeed-${crypto.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return `onefeed-${Date.now().toString(36)}`;
+  }
+}
 
 export default function ChatPanel({ inputRef, onClose }) {
   const { user } = useAuth();
@@ -67,16 +84,13 @@ export default function ChatPanel({ inputRef, onClose }) {
     setLoading(true);
 
     try {
-      // The backend forwards this to the n8n "chat" webhook and
-      // returns whatever n8n responds with, e.g. { reply: "..." }
-      const data = await sendChatMessage(text, nextMessages);
-      const reply =
-        typeof data?.reply === "string" ? data.reply : JSON.stringify(data);
+      // Goes straight to the n8n Chat Trigger webhook (see lib/api.js).
+      const reply = await sendAiHelperMessage(text, getSessionId(user));
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       await persistMessage("assistant", reply);
     } catch (err) {
       setError(
-        "Could not reach the automation service. Check that the backend and the n8n webhook are running."
+        "Could not reach the AI Helper. Check that n8n is running and the chat workflow is active."
       );
     } finally {
       setLoading(false);
@@ -101,14 +115,15 @@ export default function ChatPanel({ inputRef, onClose }) {
   }
 
   return (
-    <section className="app-chat" aria-label="Campaign chat">
+    <section className="app-chat" aria-label="AI Helper chat">
       <header className="app-chat-head">
         <div className="app-chat-title">
-          New campaign
+          <span className="app-chat-avatar" aria-hidden="true"><Icon name="bot" size={18} strokeWidth={1.9} /></span>
+          AI Helper
           <span className="app-live-dot" aria-hidden="true" />
         </div>
-        <button type="button" className="app-icon-btn" onClick={onClose} aria-label="Hide chat" title="Hide chat">
-          <Icon name="panelRight" size={18} />
+        <button type="button" className="app-icon-btn" onClick={onClose} aria-label="Minimize AI Helper" title="Minimize">
+          <Icon name="chevronDown" size={20} />
         </button>
       </header>
 
@@ -117,8 +132,9 @@ export default function ChatPanel({ inputRef, onClose }) {
           <div className="app-chat-empty">
             <span className="app-chat-empty-mark"><BoltIcon size={20} /></span>
             <p>
-              Describe a campaign or update. For example: &ldquo;Write a week
-              of content for our new product launch, friendly tone.&rdquo;
+              Hi! I&rsquo;m your AI Helper. Ask me anything, for example:
+              &ldquo;Write a week of content for our new product launch,
+              friendly tone.&rdquo;
             </p>
           </div>
         )}
@@ -165,7 +181,7 @@ export default function ChatPanel({ inputRef, onClose }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe your campaign…"
+          placeholder="Ask the AI Helper…"
           rows={2}
         />
         <div className="app-composer-bar">

@@ -67,6 +67,17 @@ const PATHS = {
     </>
   ),
   sparkle: <path d="M12 3c.4 4.6 1.4 5.6 6 6-4.6.4-5.6 1.4-6 6-.4-4.6-1.4-5.6-6-6 4.6-.4 5.6-1.4 6-6z" />,
+  bot: (
+    <>
+      <path d="M12 4V2" />
+      <circle cx="12" cy="1.6" r="0.4" />
+      <rect x="4" y="6" width="16" height="13" rx="4" />
+      <path d="M2 11.5v3M22 11.5v3" />
+      <circle cx="9" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <path d="M9.5 15.5c1.4 1 3.6 1 5 0" />
+    </>
+  ),
   chat: (
     <>
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
