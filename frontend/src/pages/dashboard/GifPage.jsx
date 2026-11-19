@@ -1,9 +1,13 @@
+import MediaLibrary from "../../components/dashboard/MediaLibrary.jsx";
+
 export default function GifPage() {
   return (
-    <div className="placeholder-page">
-      <span className="badge badge-gif">GIF</span>
-      <h2>GIF</h2>
-      <p>This section is not built yet. Content and controls will go here.</p>
-    </div>
+    <MediaLibrary
+      kind="gif"
+      title="GIFs"
+      noun="GIF"
+      icon="gif"
+      description="Every animated GIF generated from your campaigns."
+    />
   );
 }

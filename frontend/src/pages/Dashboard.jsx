@@ -49,6 +49,8 @@ function AppShell() {
   // arrived with a prefilled prompt from the marketing site.
   const [chatOpen, setChatOpen] = useState(() => Boolean(location.state?.prompt));
   const chatInputRef = useRef(null);
+  // The campaign chat is full page and has its own header, so the greeting bar is hidden there.
+  const isCampaignPage = location.pathname.startsWith("/dashboard/campaign");
 
   const openChat = useCallback(({ focus = true } = {}) => {
     setChatOpen(true);
@@ -85,33 +87,35 @@ function AppShell() {
       <div className="app-center">
         {/* The header lives inside the scroll area so it scrolls away with the page. */}
         <main className="app-content">
-          <header className="app-topbar">
-            {!sidebarOpen && (
-              <button type="button" className="app-icon-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" title="Open sidebar">
-                <Icon name="menu" size={20} />
+          {!isCampaignPage && (
+            <header className="app-topbar">
+              {!sidebarOpen && (
+                <button type="button" className="app-icon-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar" title="Open sidebar">
+                  <Icon name="menu" size={20} />
+                </button>
+              )}
+
+              <h1 className="app-greeting">
+                {greetingText}, <span>{displayName(user)}</span>
+              </h1>
+
+              <button
+                type="button"
+                className={`app-helper-btn${chatOpen ? " is-open" : ""}`}
+                onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
+                aria-label={chatOpen ? "Close AI Helper" : "Open AI Helper"}
+                aria-expanded={chatOpen}
+              >
+                <span className="app-helper-btn-icon">
+                  <Icon name="bot" size={16} strokeWidth={1.9} />
+                  <span className="app-helper-btn-status" aria-hidden="true" />
+                </span>
+                AI Helper
               </button>
-            )}
+            </header>
+          )}
 
-            <h1 className="app-greeting">
-              {greetingText}, <span>{displayName(user)}</span>
-            </h1>
-
-            <button
-              type="button"
-              className={`app-helper-btn${chatOpen ? " is-open" : ""}`}
-              onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
-              aria-label={chatOpen ? "Close AI Helper" : "Open AI Helper"}
-              aria-expanded={chatOpen}
-            >
-              <span className="app-helper-btn-icon">
-                <Icon name="bot" size={16} strokeWidth={1.9} />
-                <span className="app-helper-btn-status" aria-hidden="true" />
-              </span>
-              AI Helper
-            </button>
-          </header>
-
-          <Outlet context={{ openChat }} />
+          <Outlet context={{ openChat, sidebarOpen, openSidebar: () => setSidebarOpen(true) }} />
         </main>
       </div>
 
